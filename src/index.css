@@ -1,0 +1,77 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "M PLUS Rounded 1c", ui-rounded, "Hiragino Maru Gothic ProN", system-ui, sans-serif;
+  --color-ink: #2a2350;
+  --color-ink-soft: #6b6590;
+  --color-grape: #7c5cff;
+  --color-bubble: #ff5fa2;
+  --color-sky: #22b8e8;
+  --color-sun: #ffb020;
+  --color-mint: #22c98c;
+  --color-cloud: #f6f3ff;
+}
+
+@layer base {
+  html, body, #root { min-height: 100%; }
+  body {
+    @apply font-sans text-ink antialiased;
+    background:
+      radial-gradient(circle at 10% 0%, #ffe3f1 0, transparent 40%),
+      radial-gradient(circle at 100% 20%, #dff6ff 0, transparent 45%),
+      linear-gradient(180deg, #f7f3ff 0%, #fff8ec 100%);
+    background-attachment: fixed;
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior-y: none;
+  }
+  button { cursor: pointer; }
+  button:disabled { cursor: not-allowed; }
+}
+
+@utility btn {
+  @apply inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 font-extrabold
+    transition select-none disabled:opacity-50;
+  &:active:not(:disabled) { transform: translateY(3px) scale(0.98); }
+}
+@utility btn-primary {
+  @apply btn bg-grape text-white shadow-[0_6px_0_#5a3fd6];
+  &:active:not(:disabled) { box-shadow: 0 2px 0 #5a3fd6; }
+}
+@utility btn-soft {
+  @apply btn bg-white text-ink shadow-[0_4px_0_#e2dcf5] border-2 border-[#ece7fb];
+}
+@utility card {
+  @apply rounded-3xl bg-white/85 backdrop-blur shadow-[0_8px_24px_-12px_rgba(60,40,140,0.35)] border border-white;
+}
+@utility chip {
+  @apply inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-bold;
+}
+
+@keyframes pop-in {
+  0% { transform: scale(0.4); opacity: 0; }
+  60% { transform: scale(1.15); opacity: 1; }
+  100% { transform: scale(1); }
+}
+@keyframes float-y {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+@keyframes pulse-ring {
+  0% { transform: scale(0.9); opacity: 0.7; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+@keyframes shine {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}
+.animate-pop { animation: pop-in 0.45s cubic-bezier(.2,.9,.3,1.3) both; }
+.animate-float { animation: float-y 2.4s ease-in-out infinite; }
+.animate-pulse-ring { animation: pulse-ring 1.2s ease-out infinite; }
+.text-shine {
+  background: linear-gradient(90deg, #ff5fa2, #ffb020, #22c98c, #22b8e8, #7c5cff, #ff5fa2);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: shine 3s linear infinite;
+}
