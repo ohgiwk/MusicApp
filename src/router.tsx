@@ -19,4 +19,7 @@ export const router = createBrowserRouter([
       { path: '*', element: <HomePage /> },
     ],
   },
-])
+], {
+  // vite.config.ts の base と揃える (末尾の / は除く)
+  basename: import.meta.env.BASE_URL.replace(/\/$/, '') || '/',
+})
