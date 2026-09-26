@@ -1,5 +1,6 @@
 import { Link, Outlet, useLocation } from 'react-router'
 import { Icon } from './Icon'
+import { UpdateNotice } from './UpdateNotice'
 
 const TITLES: Record<string, string> = {
   '/monitor': 'ピッチモニター',
@@ -24,6 +25,7 @@ export function Layout() {
       <main className="flex flex-1 flex-col">
         <Outlet />
       </main>
+      <UpdateNotice />
     </div>
   )
 }

@@ -4,6 +4,7 @@ import { Icon } from '../components/Icon'
 import { StatBar } from '../components/StatBar'
 import { GAMES, MONITOR } from '../games/meta'
 import { VOICE_RANGES, useSettingsStore, type VoiceRange } from '../store/settingsStore'
+import { APP_VERSION, formatVersion } from '../update/versionCheck'
 import { STAT_LABELS, isDoneToday, useStatsStore, type StatKey } from '../store/statsStore'
 
 const STAT_COLORS: Record<StatKey, string> = {
@@ -115,6 +116,8 @@ export function HomePage() {
           </div>
         </div>
       </section>
+
+      <p className="text-center text-xs text-ink-soft/70">ver. {formatVersion(APP_VERSION)}</p>
     </div>
   )
 }
