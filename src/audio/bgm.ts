@@ -51,15 +51,21 @@ const BASS: Record<Chord, [number, number]> = {
   Em: [40, 47],
 }
 
+// 楽譜は1小節1行で読めるよう整形しない
+// prettier-ignore
 const B4 = 71, C5 = 72, D5 = 74, E5 = 76, F5 = 77, G5 = 79, A5 = 81, B5 = 83, C6 = 84, D6 = 86
 
 /** イントロ: 最初に1回だけ。アルペジオで始まり、最後の D5 がループ先頭の E5 へつながる */
+// 楽譜は1小節1行で読めるよう整形しない
+// prettier-ignore
 export const INTRO: Bar[] = [
   { chord: 'C', drums: 'none', bass: 'hold', melody: [[0, C5, 2], [2, E5, 2], [4, G5, 2], [6, C6, 2], [8, G5, 2], [10, E5, 2], [12, G5, 2], [14, C6, 2]] },
   { chord: 'G', drums: 'light', bass: 'hold', fill: true, melody: [[0, B5, 4], [4, A5, 2], [6, G5, 2], [8, G5, 2], [10, A5, 2], [12, B5, 2], [14, D5, 2]] },
 ]
 
 /** ループ本体 A (8小節): C G Am F / C G F G */
+// 楽譜は1小節1行で読めるよう整形しない
+// prettier-ignore
 const SECTION_A: Bar[] = [
   { chord: 'C', drums: 'full', bass: 'groove', melody: [[0, E5, 2], [2, G5, 2], [4, A5, 2], [6, G5, 2], [8, E5, 3], [12, D5, 2], [14, C5, 2]] },
   { chord: 'G', drums: 'full', bass: 'groove', melody: [[0, D5, 2], [2, B4, 2], [4, D5, 2], [6, G5, 4], [12, A5, 2], [14, G5, 2]] },
@@ -73,6 +79,8 @@ const SECTION_A: Bar[] = [
 ]
 
 /** ループ本体 B (8小節): F G Em Am / F G C G。最後の小節がループ先頭 (A) へのターンアラウンド */
+// 楽譜は1小節1行で読めるよう整形しない
+// prettier-ignore
 const SECTION_B: Bar[] = [
   { chord: 'F', drums: 'full', bass: 'groove', melody: [[0, A5, 4], [4, C6, 2], [6, A5, 2], [8, G5, 4], [12, F5, 2], [14, G5, 2]] },
   { chord: 'G', drums: 'full', bass: 'groove', melody: [[0, B5, 4], [4, D6, 2], [6, B5, 2], [8, A5, 4], [12, G5, 4]] },
@@ -179,10 +187,13 @@ export class BgmPlayer {
     g.setValueAtTime(g.value, ctx.currentTime)
     g.linearRampToValueAtTime(0, ctx.currentTime + fadeSec)
     window.clearTimeout(this.stopTimer)
-    this.stopTimer = window.setTimeout(() => {
-      window.clearInterval(this.timer)
-      this.playing = false
-    }, fadeSec * 1000 + 50)
+    this.stopTimer = window.setTimeout(
+      () => {
+        window.clearInterval(this.timer)
+        this.playing = false
+      },
+      fadeSec * 1000 + 50,
+    )
   }
 
   /**

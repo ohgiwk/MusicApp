@@ -25,7 +25,9 @@ export function TabBar() {
             >
               {({ isActive }) => (
                 <>
-                  <span className={`grid h-8 w-12 place-items-center rounded-full transition ${isActive ? 'bg-grape/12' : ''}`}>
+                  <span
+                    className={`grid h-8 w-12 place-items-center rounded-full transition ${isActive ? 'bg-grape/12' : ''}`}
+                  >
                     <Icon name={t.icon} size={22} strokeWidth={isActive ? 2.6 : 2.2} />
                   </span>
                   {t.label}

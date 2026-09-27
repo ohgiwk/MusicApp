@@ -75,11 +75,22 @@ export class VoiceFlightEngine {
     this.lastGateMidi = Math.round((cfg.lowMidi + cfg.highMidi) / 2)
     this.charY = this.h / 2
     this.stats = {
-      score: 0, combo: 0, maxCombo: 0, hits: 0, perfects: 0, misses: 0,
-      remainingMs: cfg.durationMs, finished: false,
+      score: 0,
+      combo: 0,
+      maxCombo: 0,
+      hits: 0,
+      perfects: 0,
+      misses: 0,
+      remainingMs: cfg.durationMs,
+      finished: false,
     }
     for (let i = 0; i < 6; i++) {
-      this.clouds.push({ x: Math.random() * 1.2, y: Math.random(), r: 20 + Math.random() * 30, speed: 0.2 + Math.random() * 0.3 })
+      this.clouds.push({
+        x: Math.random() * 1.2,
+        y: Math.random(),
+        r: 20 + Math.random() * 30,
+        speed: 0.2 + Math.random() * 0.3,
+      })
     }
   }
 
@@ -188,7 +199,8 @@ export class VoiceFlightEngine {
     const candidates: number[] = []
     for (let m = Math.ceil(lowMidi + 1); m <= highMidi - 1; m++) {
       const { maxStep, sharps } = this.cfg.level
-      if (Math.abs(m - this.lastGateMidi) <= maxStep && m !== this.lastGateMidi && (sharps || isNatural(m))) candidates.push(m)
+      if (Math.abs(m - this.lastGateMidi) <= maxStep && m !== this.lastGateMidi && (sharps || isNatural(m)))
+        candidates.push(m)
     }
     const midi = candidates.length
       ? candidates[Math.floor(Math.random() * candidates.length)]
@@ -214,9 +226,11 @@ export class VoiceFlightEngine {
       s.score += pts
       this.burst(this.charX, this.charY, perfect ? 26 : 14)
       this.popups.push({
-        x: this.charX, y: this.charY - 30,
+        x: this.charX,
+        y: this.charY - 30,
         text: perfect ? `PERFECT +${pts}` : `+${pts}`,
-        color: perfect ? '#ff5fa2' : '#22c98c', life: 0.9,
+        color: perfect ? '#ff5fa2' : '#22c98c',
+        life: 0.9,
       })
     } else {
       g.state = 'miss'
@@ -224,8 +238,11 @@ export class VoiceFlightEngine {
       s.misses++
       this.shake = 1
       this.popups.push({
-        x: this.charX, y: this.charY - 30,
-        text: this.charY > cy ? 'もっと高く！' : 'もっと低く！', color: '#9a94b8', life: 0.9,
+        x: this.charX,
+        y: this.charY - 30,
+        text: this.charY > cy ? 'もっと高く！' : 'もっと低く！',
+        color: '#9a94b8',
+        life: 0.9,
       })
     }
   }
@@ -235,7 +252,11 @@ export class VoiceFlightEngine {
       const a = Math.random() * Math.PI * 2
       const v = 80 + Math.random() * 180
       this.particles.push({
-        x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 80, life: 0.6 + Math.random() * 0.4,
+        x,
+        y,
+        vx: Math.cos(a) * v,
+        vy: Math.sin(a) * v - 80,
+        life: 0.6 + Math.random() * 0.4,
         color: COLORS[i % COLORS.length],
       })
     }

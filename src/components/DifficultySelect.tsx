@@ -2,7 +2,15 @@ import { GAME_LEVELS, levelOption, type LevelGameId } from '../games/difficulty'
 import { useLevel, useSettingsStore } from '../store/settingsStore'
 
 /** ゲーム開始前の難易度 (レベル) 選択。選んだものはゲームごとに保存される */
-export function DifficultySelect({ game, disabled, label = '難易度' }: { game: LevelGameId; disabled?: boolean; label?: string }) {
+export function DifficultySelect({
+  game,
+  disabled,
+  label = '難易度',
+}: {
+  game: LevelGameId
+  disabled?: boolean
+  label?: string
+}) {
   const level = useLevel(game)
   const setDifficulty = useSettingsStore((s) => s.setDifficulty)
   const options = GAME_LEVELS[game]

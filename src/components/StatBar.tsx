@@ -14,7 +14,9 @@ export function StatBar({ label, value, color, delta, hint, count }: Props) {
       <div className="mb-1 flex items-baseline justify-between gap-2 text-sm">
         <span className="font-bold">
           {label}
-          {count !== undefined && count > 0 && <span className="ml-1.5 text-[10px] font-bold text-ink-soft">計測 {count}回</span>}
+          {count !== undefined && count > 0 && (
+            <span className="ml-1.5 text-[10px] font-bold text-ink-soft">計測 {count}回</span>
+          )}
         </span>
         <span className="flex shrink-0 items-baseline gap-1.5">
           {delta !== undefined && delta !== null && delta !== 0 && (

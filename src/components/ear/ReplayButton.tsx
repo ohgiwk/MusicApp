@@ -2,7 +2,15 @@ import { replayFactor } from '../../games/ear/common'
 import { Icon } from '../Icon'
 
 /** もう一度聴く。聴き直すほどこの問題の得点が下がる */
-export function ReplayButton({ onClick, replays, disabled }: { onClick: () => void; replays: number; disabled?: boolean }) {
+export function ReplayButton({
+  onClick,
+  replays,
+  disabled,
+}: {
+  onClick: () => void
+  replays: number
+  disabled?: boolean
+}) {
   const next = Math.round(replayFactor(replays + 1) * 100)
   return (
     <button className="btn-soft flex-col !gap-0 !px-4 !py-2" onClick={onClick} disabled={disabled}>

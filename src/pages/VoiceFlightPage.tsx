@@ -60,7 +60,12 @@ function VoiceFlightGame() {
   })
 
   const newEngine = (c: number) => {
-    const e = new VoiceFlightEngine({ lowMidi: c - HALF_WINDOW, highMidi: c + HALF_WINDOW, durationMs: DURATION_MS, level })
+    const e = new VoiceFlightEngine({
+      lowMidi: c - HALF_WINDOW,
+      highMidi: c + HALF_WINDOW,
+      durationMs: DURATION_MS,
+      level,
+    })
     const el = containerRef.current
     if (el) e.resize(el.clientWidth, el.clientHeight)
     engineRef.current = e
@@ -160,7 +165,9 @@ function VoiceFlightGame() {
         <span className="chip bg-white text-base text-ink tabular-nums">
           <Icon name="trophy" size={16} className="text-sun" /> {s?.score ?? 0}
         </span>
-        <span className={`chip text-base tabular-nums ${s && s.combo >= 3 ? 'bg-bubble text-white' : 'bg-white text-ink'}`}>
+        <span
+          className={`chip text-base tabular-nums ${s && s.combo >= 3 ? 'bg-bubble text-white' : 'bg-white text-ink'}`}
+        >
           {s?.combo ?? 0} コンボ
         </span>
         <span className="chip bg-white text-base text-ink tabular-nums">
@@ -197,7 +204,10 @@ function VoiceFlightGame() {
             <h2 className="text-xl font-extrabold">楽な高さで「あー」と声を出してね</h2>
             <p className="text-sm text-ink-soft">その高さが画面の真ん中になります</p>
             <div className="h-4 w-full max-w-xs overflow-hidden rounded-full bg-cloud">
-              <div className="h-full rounded-full bg-sky transition-[width]" style={{ width: `${Math.min(1, calib) * 100}%` }} />
+              <div
+                className="h-full rounded-full bg-sky transition-[width]"
+                style={{ width: `${Math.min(1, calib) * 100}%` }}
+              />
             </div>
             <button
               className="btn-soft text-sm"
@@ -223,7 +233,8 @@ function VoiceFlightGame() {
       </div>
 
       <p className="text-center text-xs text-ink-soft">
-        <DifficultyChip game="flight" /> 音域: {noteFromMidi(center - HALF_WINDOW).label} 〜 {noteFromMidi(center + HALF_WINDOW).label}（中心 {noteFromMidi(center).label}）
+        <DifficultyChip game="flight" /> 音域: {noteFromMidi(center - HALF_WINDOW).label} 〜{' '}
+        {noteFromMidi(center + HALF_WINDOW).label}（中心 {noteFromMidi(center).label}）
         {phase === 'play' || phase === 'result' ? (
           <button className="ml-2 underline" onClick={startCalibration}>
             中心を測り直す

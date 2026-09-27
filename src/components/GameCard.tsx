@@ -52,7 +52,9 @@ export function GameCard({ to, icon, title, description, color, done, best, badg
           </span>
         )}
       </span>
-      <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-full bg-cloud text-grape ${compact ? '' : 'sm:hidden'}`}>
+      <span
+        className={`grid h-9 w-9 shrink-0 place-items-center rounded-full bg-cloud text-grape ${compact ? '' : 'sm:hidden'}`}
+      >
         <Icon name="play" size={16} />
       </span>
     </Link>

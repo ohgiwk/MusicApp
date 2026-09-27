@@ -32,7 +32,13 @@ export interface TargetLevel {
 }
 
 export const TARGET_LEVELS: Record<Difficulty, TargetLevel> = {
-  easy: { hitRange: 40, holdMs: 1000, sharps: false, rangeInset: 4, desc: '正解範囲 ±40 cents・1秒キープ・出しやすい音だけ' },
+  easy: {
+    hitRange: 40,
+    holdMs: 1000,
+    sharps: false,
+    rangeInset: 4,
+    desc: '正解範囲 ±40 cents・1秒キープ・出しやすい音だけ',
+  },
   normal: { hitRange: 25, holdMs: 1500, sharps: false, rangeInset: 2, desc: '正解範囲 ±25 cents・1.5秒キープ' },
   hard: { hitRange: 15, holdMs: 2000, sharps: true, rangeInset: 0, desc: '正解範囲 ±15 cents・2秒キープ・半音も出題' },
 }
@@ -55,15 +61,36 @@ export interface FlightLevel {
 
 export const FLIGHT_LEVELS: Record<Difficulty, FlightLevel> = {
   easy: {
-    halfWindow: 5, gapStart: 1.7, gapEnd: 1.3, speedMul: 0.8, spawnStart: 2600, spawnEnd: 2200, maxStep: 3, sharps: false,
+    halfWindow: 5,
+    gapStart: 1.7,
+    gapEnd: 1.3,
+    speedMul: 0.8,
+    spawnStart: 2600,
+    spawnEnd: 2200,
+    maxStep: 3,
+    sharps: false,
     desc: 'ゲートが広い・ゆっくり・音の移動が小さい',
   },
   normal: {
-    halfWindow: 6, gapStart: 1.25, gapEnd: 0.9, speedMul: 1, spawnStart: 2100, spawnEnd: 1600, maxStep: 4, sharps: false,
+    halfWindow: 6,
+    gapStart: 1.25,
+    gapEnd: 0.9,
+    speedMul: 1,
+    spawnStart: 2100,
+    spawnEnd: 1600,
+    maxStep: 4,
+    sharps: false,
     desc: '標準のゲート幅とスピード',
   },
   hard: {
-    halfWindow: 7, gapStart: 0.9, gapEnd: 0.6, speedMul: 1.2, spawnStart: 1700, spawnEnd: 1300, maxStep: 5, sharps: true,
+    halfWindow: 7,
+    gapStart: 0.9,
+    gapEnd: 0.6,
+    speedMul: 1.2,
+    spawnStart: 1700,
+    spawnEnd: 1300,
+    maxStep: 5,
+    sharps: true,
     desc: 'ゲートが狭い・速い・半音のゲートも出る',
   },
 }
@@ -86,15 +113,33 @@ export interface MelodyLevel {
 
 export const MELODY_LEVELS: Record<Difficulty, MelodyLevel> = {
   easy: {
-    noteMs: 1000, okCents: 70, partialCents: 180, startLength: 3, maxLength: 4, maxStep: 1, maxSpan: 5,
+    noteMs: 1000,
+    okCents: 70,
+    partialCents: 180,
+    startLength: 3,
+    maxLength: 4,
+    maxStep: 1,
+    maxSpan: 5,
     desc: 'ゆっくり・となりの音へ動くだけ・判定ゆるめ（±70 cents）',
   },
   normal: {
-    noteMs: 800, okCents: 50, partialCents: 150, startLength: 3, maxLength: 5, maxStep: 3, maxSpan: 7,
+    noteMs: 800,
+    okCents: 50,
+    partialCents: 150,
+    startLength: 3,
+    maxLength: 5,
+    maxStep: 3,
+    maxSpan: 7,
     desc: '標準のテンポ・判定 ±50 cents',
   },
   hard: {
-    noteMs: 650, okCents: 35, partialCents: 120, startLength: 4, maxLength: 6, maxStep: 4, maxSpan: 9,
+    noteMs: 650,
+    okCents: 35,
+    partialCents: 120,
+    startLength: 4,
+    maxLength: 6,
+    maxStep: 4,
+    maxSpan: 9,
     desc: '速い・音の跳躍が大きい・判定きびしめ（±35 cents）',
   },
 }
@@ -136,9 +181,23 @@ export interface MemoryLevel {
 }
 
 export const MEMORY_LEVELS: Record<Difficulty, MemoryLevel> = {
-  easy: { minNotes: 3, maxNotes: 3, steps: [3, 4, 5, 7], choices: 3, noteSec: 0.6, desc: '3音・大きく動くメロディ・3択' },
+  easy: {
+    minNotes: 3,
+    maxNotes: 3,
+    steps: [3, 4, 5, 7],
+    choices: 3,
+    noteSec: 0.6,
+    desc: '3音・大きく動くメロディ・3択',
+  },
   normal: { minNotes: 4, maxNotes: 5, steps: [1, 2, 3, 4, 5], choices: 3, noteSec: 0.5, desc: '4〜5音・3択' },
-  hard: { minNotes: 6, maxNotes: 8, steps: [0, 1, 2, 2, 3], choices: 4, noteSec: 0.42, desc: '6〜8音・同じ音や小さな動きも・4択' },
+  hard: {
+    minNotes: 6,
+    maxNotes: 8,
+    steps: [0, 1, 2, 2, 3],
+    choices: 4,
+    noteSec: 0.42,
+    desc: '6〜8音・同じ音や小さな動きも・4択',
+  },
 }
 
 export type DistanceLevelId = 'lv1' | 'lv2' | 'lv3' | 'lv4'
@@ -167,8 +226,11 @@ export interface LevelOption {
 const difficultyOptions = (descs: Record<Difficulty, string>): LevelOption[] =>
   DIFFICULTIES.map((d) => ({ id: d, label: DIFFICULTY_LABELS[d], color: DIFFICULTY_COLORS[d], desc: descs[d] }))
 
-const descsOf = (levels: Record<Difficulty, { desc: string }>) =>
-  ({ easy: levels.easy.desc, normal: levels.normal.desc, hard: levels.hard.desc })
+const descsOf = (levels: Record<Difficulty, { desc: string }>) => ({
+  easy: levels.easy.desc,
+  normal: levels.normal.desc,
+  hard: levels.hard.desc,
+})
 
 /** ゲームごとに選べるレベル (ランキングもこの単位で分ける) */
 export const GAME_LEVELS: Record<LevelGameId, LevelOption[]> = {
@@ -181,7 +243,12 @@ export const GAME_LEVELS: Record<LevelGameId, LevelOption[]> = {
 }
 
 export const DEFAULT_LEVEL: Record<LevelGameId, string> = {
-  target: 'normal', flight: 'normal', melody: 'normal', highlow: 'easy', memory: 'easy', distance: 'lv1',
+  target: 'normal',
+  flight: 'normal',
+  melody: 'normal',
+  highlow: 'easy',
+  memory: 'easy',
+  distance: 'lv1',
 }
 
 export function levelOption(game: LevelGameId, id: string | undefined): LevelOption {

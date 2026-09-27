@@ -1,7 +1,7 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 @theme {
-  --font-sans: "M PLUS Rounded 1c", ui-rounded, "Hiragino Maru Gothic ProN", system-ui, sans-serif;
+  --font-sans: 'M PLUS Rounded 1c', ui-rounded, 'Hiragino Maru Gothic ProN', system-ui, sans-serif;
   --color-ink: #2a2350;
   --color-ink-soft: #6b6590;
   --color-grape: #7c5cff;
@@ -14,10 +14,16 @@
 }
 
 @layer base {
-  html, body, #root { min-height: 100%; }
+  html,
+  body,
+  #root {
+    min-height: 100%;
+  }
   /* iOS Safari はページの背景「色」でステータスバー/ツールバーを塗るため、
      グラデーションとは別に単色を指定する (index.html の theme-color と同じ色) */
-  html { background-color: var(--color-page); }
+  html {
+    background-color: var(--color-page);
+  }
   body {
     @apply font-sans text-ink antialiased;
     background-color: var(--color-page);
@@ -30,30 +36,46 @@
     overscroll-behavior-y: none;
   }
   /* ゲームアプリらしく: スクロールバーを隠す (スクロール自体はできる) */
-  html, body, * { scrollbar-width: none; }
-  *::-webkit-scrollbar { display: none; }
+  html,
+  body,
+  * {
+    scrollbar-width: none;
+  }
+  *::-webkit-scrollbar {
+    display: none;
+  }
   /* テキスト選択・長押しメニューを無効化 (声を出しながらのタップ操作で誤選択しないように) */
   body {
     -webkit-user-select: none;
     user-select: none;
     -webkit-touch-callout: none;
   }
-  input, textarea, [contenteditable="true"] {
+  input,
+  textarea,
+  [contenteditable='true'] {
     -webkit-user-select: text;
     user-select: text;
   }
-  button { cursor: pointer; }
-  button:disabled { cursor: not-allowed; }
+  button {
+    cursor: pointer;
+  }
+  button:disabled {
+    cursor: not-allowed;
+  }
 }
 
 @utility btn {
   @apply inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 font-extrabold
     transition select-none disabled:opacity-50;
-  &:active:not(:disabled) { transform: translateY(3px) scale(0.98); }
+  &:active:not(:disabled) {
+    transform: translateY(3px) scale(0.98);
+  }
 }
 @utility btn-primary {
   @apply btn bg-grape text-white shadow-[0_6px_0_#5a3fd6];
-  &:active:not(:disabled) { box-shadow: 0 2px 0 #5a3fd6; }
+  &:active:not(:disabled) {
+    box-shadow: 0 2px 0 #5a3fd6;
+  }
 }
 @utility btn-soft {
   @apply btn bg-white text-ink shadow-[0_4px_0_#e2dcf5] border-2 border-[#ece7fb];
@@ -66,25 +88,54 @@
 }
 
 @keyframes pop-in {
-  0% { transform: scale(0.4); opacity: 0; }
-  60% { transform: scale(1.15); opacity: 1; }
-  100% { transform: scale(1); }
+  0% {
+    transform: scale(0.4);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.15);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 @keyframes float-y {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-6px); }
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
 }
 @keyframes pulse-ring {
-  0% { transform: scale(0.9); opacity: 0.7; }
-  100% { transform: scale(1.6); opacity: 0; }
+  0% {
+    transform: scale(0.9);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
 }
 @keyframes shine {
-  from { background-position: 200% 0; }
-  to { background-position: -200% 0; }
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
 }
-.animate-pop { animation: pop-in 0.45s cubic-bezier(.2,.9,.3,1.3) both; }
-.animate-float { animation: float-y 2.4s ease-in-out infinite; }
-.animate-pulse-ring { animation: pulse-ring 1.2s ease-out infinite; }
+.animate-pop {
+  animation: pop-in 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.3) both;
+}
+.animate-float {
+  animation: float-y 2.4s ease-in-out infinite;
+}
+.animate-pulse-ring {
+  animation: pulse-ring 1.2s ease-out infinite;
+}
 .text-shine {
   background: linear-gradient(90deg, #ff5fa2, #ffb020, #22c98c, #22b8e8, #7c5cff, #ff5fa2);
   background-size: 200% 100%;

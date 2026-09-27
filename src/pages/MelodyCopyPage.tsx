@@ -52,10 +52,13 @@ function MelodyCopyGame() {
     timers.current.forEach(clearTimeout)
     timers.current = []
   }
-  useEffect(() => () => {
-    clearTimers()
-    playback.current?.cancel()
-  }, [])
+  useEffect(
+    () => () => {
+      clearTimers()
+      playback.current?.cancel()
+    },
+    [],
+  )
 
   // 難易度を変えたら最初の音数からやり直す
   const prevDifficulty = useRef(difficulty)
@@ -178,7 +181,11 @@ function MelodyCopyGame() {
 
       {phase !== 'result' ? (
         <div className="flex gap-3">
-          <button className="btn-soft flex-1 whitespace-nowrap !px-3" onClick={() => void listen()} disabled={phase === 'listening' || phase === 'countin' || phase === 'singing'}>
+          <button
+            className="btn-soft flex-1 whitespace-nowrap !px-3"
+            onClick={() => void listen()}
+            disabled={phase === 'listening' || phase === 'countin' || phase === 'singing'}
+          >
             <Icon name="speaker" size={20} /> {phase === 'ready' ? 'お手本を聞く' : 'もう一度聞く'}
           </button>
           <button
@@ -224,7 +231,18 @@ interface GraphProps {
 }
 
 /** 横方向のピッチバー + 歌声の軌跡 */
-function MelodyGraph({ melody, activeNote, showTargets, samples, cursorT, liveMidi, result, countIn, noteMs, okCents }: GraphProps) {
+function MelodyGraph({
+  melody,
+  activeNote,
+  showTargets,
+  samples,
+  cursorT,
+  liveMidi,
+  result,
+  countIn,
+  noteMs,
+  okCents,
+}: GraphProps) {
   const NOTE_MS = noteMs
   const OK_CENTS = okCents
   const W = 600
@@ -259,9 +277,24 @@ function MelodyGraph({ melody, activeNote, showTargets, samples, cursorT, liveMi
       <svg viewBox={`0 0 ${W} ${H}`} className="h-auto w-full select-none">
         {rows.map((m) => (
           <g key={m}>
-            <line x1={padL} x2={W - padR} y1={y(m)} y2={y(m)} stroke="#2a2350" strokeOpacity={noteFromMidi(m).name.includes('#') ? 0.03 : 0.08} />
+            <line
+              x1={padL}
+              x2={W - padR}
+              y1={y(m)}
+              y2={y(m)}
+              stroke="#2a2350"
+              strokeOpacity={noteFromMidi(m).name.includes('#') ? 0.03 : 0.08}
+            />
             {!noteFromMidi(m).name.includes('#') && (
-              <text x={padL - 6} y={y(m) + 4} textAnchor="end" fontSize={11} fontWeight={700} fill="#2a2350" fillOpacity={0.35}>
+              <text
+                x={padL - 6}
+                y={y(m) + 4}
+                textAnchor="end"
+                fontSize={11}
+                fontWeight={700}
+                fill="#2a2350"
+                fillOpacity={0.35}
+              >
                 {noteFromMidi(m).label}
               </text>
             )}
@@ -270,11 +303,27 @@ function MelodyGraph({ melody, activeNote, showTargets, samples, cursorT, liveMi
 
         {melody.map((m, i) => {
           const nr = result?.notes[i]
-          const color = nr ? (nr.ok ? '#22c98c' : nr.cents === null ? '#c9c3e0' : '#ff5fa2') : i === activeNote ? '#ffb020' : '#7c5cff'
+          const color = nr
+            ? nr.ok
+              ? '#22c98c'
+              : nr.cents === null
+                ? '#c9c3e0'
+                : '#ff5fa2'
+            : i === activeNote
+              ? '#ffb020'
+              : '#7c5cff'
           const bandH = ((OK_CENTS / 100) * (H - 32)) / (hi - lo)
           return (
             <g key={i} opacity={showTargets ? 1 : 0.25}>
-              <rect x={x(i * NOTE_MS) + 3} y={y(m) - bandH} width={x(NOTE_MS) - padL - 6} height={bandH * 2} rx={bandH} fill={color} fillOpacity={0.18} />
+              <rect
+                x={x(i * NOTE_MS) + 3}
+                y={y(m) - bandH}
+                width={x(NOTE_MS) - padL - 6}
+                height={bandH * 2}
+                rx={bandH}
+                fill={color}
+                fillOpacity={0.18}
+              />
               <rect
                 x={x(i * NOTE_MS) + 3}
                 y={y(m) - 4}
@@ -304,16 +353,40 @@ function MelodyGraph({ melody, activeNote, showTargets, samples, cursorT, liveMi
         })}
 
         {paths.map((d, i) => (
-          <path key={i} d={d} fill="none" stroke="#2a2350" strokeWidth={3.5} strokeLinecap="round" strokeLinejoin="round" strokeOpacity={0.75} />
+          <path
+            key={i}
+            d={d}
+            fill="none"
+            stroke="#2a2350"
+            strokeWidth={3.5}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeOpacity={0.75}
+          />
         ))}
 
         {cursorT !== null && cursorT <= totalMs && (
-          <line x1={x(cursorT)} x2={x(cursorT)} y1={8} y2={H - 8} stroke="#ffb020" strokeWidth={3} strokeLinecap="round" />
+          <line
+            x1={x(cursorT)}
+            x2={x(cursorT)}
+            y1={8}
+            y2={H - 8}
+            stroke="#ffb020"
+            strokeWidth={3}
+            strokeLinecap="round"
+          />
         )}
 
         {liveMidi !== null && (
           <g>
-            <circle cx={W - padR / 2} cy={y(Math.max(lo, Math.min(hi, liveMidi)))} r={9} fill="#ff5fa2" stroke="white" strokeWidth={3} />
+            <circle
+              cx={W - padR / 2}
+              cy={y(Math.max(lo, Math.min(hi, liveMidi)))}
+              r={9}
+              fill="#ff5fa2"
+              stroke="white"
+              strokeWidth={3}
+            />
           </g>
         )}
       </svg>
@@ -329,7 +402,14 @@ function MelodyGraph({ melody, activeNote, showTargets, samples, cursorT, liveMi
 }
 
 function ResultPanel({
-  result, onRetry, onListen, onNext, levelUp, rank, difficultyLabel, onChangeDifficulty,
+  result,
+  onRetry,
+  onListen,
+  onNext,
+  levelUp,
+  rank,
+  difficultyLabel,
+  onChangeDifficulty,
 }: {
   difficultyLabel: string
   onChangeDifficulty: () => void
@@ -340,7 +420,8 @@ function ResultPanel({
   levelUp: boolean
   rank: RankResult | null
 }) {
-  const title = result.score >= 90 ? 'PERFECT!' : result.score >= 70 ? 'GREAT!' : result.score >= 40 ? 'GOOD!' : 'おしい！'
+  const title =
+    result.score >= 90 ? 'PERFECT!' : result.score >= 70 ? 'GREAT!' : result.score >= 40 ? 'GOOD!' : 'おしい！'
   return (
     <div className="card animate-pop flex flex-col gap-4 p-5">
       <div className="flex items-center justify-between gap-4">
@@ -351,7 +432,9 @@ function ResultPanel({
               {difficultyLabel}・{result.correct} / {result.notes.length} 音正解
             </span>
             {result.avgAbsCents !== null && (
-              <span className="block whitespace-nowrap sm:ml-2 sm:inline">平均誤差 {Math.round(result.avgAbsCents)} cents</span>
+              <span className="block whitespace-nowrap sm:ml-2 sm:inline">
+                平均誤差 {Math.round(result.avgAbsCents)} cents
+              </span>
             )}
           </p>
         </div>

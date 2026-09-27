@@ -36,7 +36,9 @@ export function HighLowPage() {
   const [phase, setPhase] = useState<Phase>('intro')
   const [question, setQuestion] = useState<HighLowQuestion | null>(null)
   const [activeNote, setActiveNote] = useState(-1)
-  const [feedback, setFeedback] = useState<{ kind: AnswerKind; gained: number; combo: number; chose: 1 | -1 } | null>(null)
+  const [feedback, setFeedback] = useState<{ kind: AnswerKind; gained: number; combo: number; chose: 1 | -1 } | null>(
+    null,
+  )
   const [sessionMin, setSessionMin] = useState<number | null>(null)
   const [rank, setRank] = useState<RankResult | null>(null)
   const prevCorrectDiff = useRef<number | null>(null)
@@ -134,7 +136,13 @@ export function HighLowPage() {
 
   return (
     <div className="flex flex-col gap-3">
-      <EarHud index={session.index} total={session.total} combo={session.combo} score={session.score} color={meta.color} />
+      <EarHud
+        index={session.index}
+        total={session.total}
+        combo={session.combo}
+        score={session.score}
+        color={meta.color}
+      />
 
       <div className="card flex min-h-[270px] flex-col items-center justify-center gap-3 p-5">
         {phase === 'feedback' && feedback && q ? (
@@ -153,9 +161,7 @@ export function HighLowPage() {
           </>
         ) : (
           <>
-            <p className="text-sm font-bold text-ink-soft">
-              {phase === 'playing' ? 'よく聴いて…' : 'どっちが高い？'}
-            </p>
+            <p className="text-sm font-bold text-ink-soft">{phase === 'playing' ? 'よく聴いて…' : 'どっちが高い？'}</p>
             <div className="flex items-center gap-6">
               {[0, 1].map((i) => (
                 <span
@@ -179,7 +185,11 @@ export function HighLowPage() {
 
       {phase === 'feedback' ? (
         <div className="flex gap-3">
-          <button className="btn-soft flex-1 whitespace-nowrap !px-3" disabled={activeNote >= 0} onClick={() => q && void play(q, 'feedback')}>
+          <button
+            className="btn-soft flex-1 whitespace-nowrap !px-3"
+            disabled={activeNote >= 0}
+            onClick={() => q && void play(q, 'feedback')}
+          >
             <Icon name="speaker" size={18} /> 聴き直す
           </button>
           <button className="btn-primary flex-1 whitespace-nowrap !px-3" onClick={next}>

@@ -8,7 +8,17 @@ const TEXT: Record<AnswerKind, { title: string; color: string }> = {
 }
 
 /** 回答後の結果表示 (正解！ +120 / 3 COMBO / 実際の音程差) */
-export function FeedbackBanner({ kind, gained, combo, children }: { kind: AnswerKind; gained: number; combo: number; children?: ReactNode }) {
+export function FeedbackBanner({
+  kind,
+  gained,
+  combo,
+  children,
+}: {
+  kind: AnswerKind
+  gained: number
+  combo: number
+  children?: ReactNode
+}) {
   const t = TEXT[kind]
   return (
     <div className="flex flex-col items-center gap-1 text-center">

@@ -92,10 +92,13 @@ export function playMelody(
     return playNote(m, noteSec - gapSec, at)
   })
   timers.push(
-    window.setTimeout(() => {
-      onNote?.(-1)
-      finish(true)
-    }, (start + midis.length * noteSec - ctx.currentTime) * 1000 + 50),
+    window.setTimeout(
+      () => {
+        onNote?.(-1)
+        finish(true)
+      },
+      (start + midis.length * noteSec - ctx.currentTime) * 1000 + 50,
+    ),
   )
 
   return {

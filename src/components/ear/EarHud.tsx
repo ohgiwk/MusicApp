@@ -1,5 +1,17 @@
 /** 問題番号・COMBO・スコア */
-export function EarHud({ index, total, combo, score, color }: { index: number; total: number; combo: number; score: number; color: string }) {
+export function EarHud({
+  index,
+  total,
+  combo,
+  score,
+  color,
+}: {
+  index: number
+  total: number
+  combo: number
+  score: number
+  color: string
+}) {
   return (
     <div className="flex items-center justify-between gap-2">
       <div className="flex flex-1 gap-1">

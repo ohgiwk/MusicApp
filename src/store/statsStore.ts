@@ -85,7 +85,12 @@ export const useStatsStore = create<StatsState>()(
       // v1 はダミーの能力値を持っていたので破棄し、実測だけで始め直す
       migrate: (old) => {
         const o = (old ?? {}) as Partial<StatsState>
-        return { samples: emptySamples(), plays: 0, playDays: [], todayDone: o.todayDone ?? [] } as unknown as StatsState
+        return {
+          samples: emptySamples(),
+          plays: 0,
+          playDays: [],
+          todayDone: o.todayDone ?? [],
+        } as unknown as StatsState
       },
     },
   ),

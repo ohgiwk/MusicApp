@@ -2,7 +2,6 @@ import type { TargetLevel } from '../difficulty'
 
 export type Grade = 'PERFECT' | 'GREAT' | 'GOOD'
 
-
 export const GRADE_STYLE: Record<Grade, { color: string; points: number }> = {
   PERFECT: { color: '#ff5fa2', points: 100 },
   GREAT: { color: '#ffb020', points: 80 },

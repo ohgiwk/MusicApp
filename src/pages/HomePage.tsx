@@ -3,7 +3,17 @@ import { BgmToggle } from '../components/BgmToggle'
 import { GameCard } from '../components/GameCard'
 import { Icon } from '../components/Icon'
 import { useState } from 'react'
-import { EAR_GAMES, GAMES, MONITOR, SKILLS, VOICE_GAMES, gameMeta, scoreUnit, type GameMeta, type Skill } from '../games/meta'
+import {
+  EAR_GAMES,
+  GAMES,
+  MONITOR,
+  SKILLS,
+  VOICE_GAMES,
+  gameMeta,
+  scoreUnit,
+  type GameMeta,
+  type Skill,
+} from '../games/meta'
 import { levelOption } from '../games/difficulty'
 import { useSettingsStore } from '../store/settingsStore'
 import { rankingOf, useScoreStore, type RankedGameId } from '../store/scoreStore'
@@ -86,14 +96,18 @@ export function HomePage() {
             <Icon name="play" size={18} /> {next.title}からスタート
           </Link>
         ) : (
-          <p className="rounded-2xl bg-mint/15 py-3 text-center font-extrabold text-mint">今日のメニューは全部クリア！ おつかれさま</p>
+          <p className="rounded-2xl bg-mint/15 py-3 text-center font-extrabold text-mint">
+            今日のメニューは全部クリア！ おつかれさま
+          </p>
         )}
       </section>
 
       {/* ミニゲーム (能力別に絞り込める) */}
       <section className="flex flex-col gap-4">
         <div className="grid grid-cols-4 gap-1.5 rounded-full bg-white/60 p-1" role="tablist" aria-label="ゲームの種類">
-          {([{ id: 'all', emoji: '', label: 'すべて' }, ...SKILLS] as { id: Filter; emoji: string; label: string }[]).map((f) => (
+          {(
+            [{ id: 'all', emoji: '', label: 'すべて' }, ...SKILLS] as { id: Filter; emoji: string; label: string }[]
+          ).map((f) => (
             <button
               key={f.id}
               role="tab"
@@ -128,9 +142,9 @@ export function HomePage() {
           </>
         ) : (
           <div className="grid gap-3 sm:grid-cols-3">
-            {GAMES
-              .filter((g) => g.skill === filter)
-              .map((g) => card(g, g.category === 'ear' ? '👂 耳トレ' : '🎤 声トレ'))}
+            {GAMES.filter((g) => g.skill === filter).map((g) =>
+              card(g, g.category === 'ear' ? '👂 耳トレ' : '🎤 声トレ'),
+            )}
           </div>
         )}
       </section>

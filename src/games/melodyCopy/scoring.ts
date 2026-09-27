@@ -64,9 +64,7 @@ export function scoreMelody(targets: number[], samples: PitchSample[], noteMs: n
   })
 
   const sungNotes = notes.filter((n) => n.cents !== null)
-  const avgAbsCents = sungNotes.length
-    ? sungNotes.reduce((a, n) => a + Math.abs(n.cents!), 0) / sungNotes.length
-    : null
+  const avgAbsCents = sungNotes.length ? sungNotes.reduce((a, n) => a + Math.abs(n.cents!), 0) / sungNotes.length : null
   const pointRate = notes.reduce((a, n) => a + n.points, 0) / notes.length
   // 歌えなかった音は誤差 partialCents 扱い
   const errForScore =
@@ -85,7 +83,10 @@ const MAJOR = [0, 2, 4, 5, 7, 9, 11]
  * maxStep: 1音ごとの最大の動き (音階の度数)、maxSpan: 全体の最大の幅 (半音)
  */
 export function generateMelody(
-  length: number, min: number, max: number, { maxStep, maxSpan }: { maxStep: number; maxSpan: number },
+  length: number,
+  min: number,
+  max: number,
+  { maxStep, maxSpan }: { maxStep: number; maxSpan: number },
 ): number[] {
   const scale: number[] = []
   for (let m = min + 2; m <= max - 3; m++) if (MAJOR.includes(((m % 12) + 12) % 12)) scale.push(m)

@@ -131,7 +131,10 @@ export function RankingPage() {
                     </p>
                     {r.detail && <p className="truncate text-sm font-bold">{r.detail}</p>}
                   </div>
-                  <p className="shrink-0 text-2xl font-extrabold tabular-nums" style={{ color: i === 0 ? meta.color : undefined }}>
+                  <p
+                    className="shrink-0 text-2xl font-extrabold tabular-nums"
+                    style={{ color: i === 0 ? meta.color : undefined }}
+                  >
                     {r.score}
                     <span className="ml-0.5 text-xs text-ink-soft">{scoreUnit(game)}</span>
                   </p>
@@ -148,7 +151,8 @@ export function RankingPage() {
           <button
             className="underline"
             onClick={() => {
-              if (window.confirm(`${meta.title}（${current.label}）の記録をすべて消去しますか？`)) clear(game, difficulty)
+              if (window.confirm(`${meta.title}（${current.label}）の記録をすべて消去しますか？`))
+                clear(game, difficulty)
             }}
           >
             {meta.title}（{current.label}）の記録を消去

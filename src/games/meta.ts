@@ -28,23 +28,94 @@ export interface GameMeta {
 
 /** 耳トレ: マイク不要。音の高低 → 音程の距離 → メロディ の順にステップアップ */
 export const EAR_GAMES: GameMeta[] = [
-  { id: 'highlow', to: '/ear/highlow', icon: 'updown', title: 'HIGH or LOW', shortTitle: 'HIGH/LOW', description: 'どっちが高い？', color: '#14b8a6', category: 'ear', skill: 'listen', step: 1 },
-  { id: 'distance', to: '/ear/distance', icon: 'distance', title: 'PITCH DISTANCE', shortTitle: 'DISTANCE', description: 'どこまで動いた？', color: '#6366f1', category: 'ear', skill: 'listen', step: 2 },
-  { id: 'memory', to: '/ear/memory', icon: 'memory', title: 'MELODY MEMORY', shortTitle: 'MEMORY', description: 'メロディを覚えろ！', color: '#f97316', category: 'ear', skill: 'melody', step: 3 },
+  {
+    id: 'highlow',
+    to: '/ear/highlow',
+    icon: 'updown',
+    title: 'HIGH or LOW',
+    shortTitle: 'HIGH/LOW',
+    description: 'どっちが高い？',
+    color: '#14b8a6',
+    category: 'ear',
+    skill: 'listen',
+    step: 1,
+  },
+  {
+    id: 'distance',
+    to: '/ear/distance',
+    icon: 'distance',
+    title: 'PITCH DISTANCE',
+    shortTitle: 'DISTANCE',
+    description: 'どこまで動いた？',
+    color: '#6366f1',
+    category: 'ear',
+    skill: 'listen',
+    step: 2,
+  },
+  {
+    id: 'memory',
+    to: '/ear/memory',
+    icon: 'memory',
+    title: 'MELODY MEMORY',
+    shortTitle: 'MEMORY',
+    description: 'メロディを覚えろ！',
+    color: '#f97316',
+    category: 'ear',
+    skill: 'melody',
+    step: 3,
+  },
 ]
 
 /** 声を使うゲーム (マイクで音程を判定) */
 export const VOICE_GAMES: GameMeta[] = [
-  { id: 'target', to: '/target', icon: 'target', title: 'ピッチターゲット', shortTitle: 'ターゲット', description: '狙った音を声で当てよう', color: '#ff5fa2', category: 'voice', skill: 'voice' },
-  { id: 'flight', to: '/flight', icon: 'rocket', title: 'ボイスフライト', shortTitle: 'フライト', description: '声の高さで飛んでみよう', color: '#22b8e8', category: 'voice', skill: 'voice' },
-  { id: 'melody', to: '/melody', icon: 'music', title: 'メロディコピー', shortTitle: 'メロディ', description: '聞いたメロディを歌い返そう', color: '#ffb020', category: 'voice', skill: 'melody' },
+  {
+    id: 'target',
+    to: '/target',
+    icon: 'target',
+    title: 'ピッチターゲット',
+    shortTitle: 'ターゲット',
+    description: '狙った音を声で当てよう',
+    color: '#ff5fa2',
+    category: 'voice',
+    skill: 'voice',
+  },
+  {
+    id: 'flight',
+    to: '/flight',
+    icon: 'rocket',
+    title: 'ボイスフライト',
+    shortTitle: 'フライト',
+    description: '声の高さで飛んでみよう',
+    color: '#22b8e8',
+    category: 'voice',
+    skill: 'voice',
+  },
+  {
+    id: 'melody',
+    to: '/melody',
+    icon: 'music',
+    title: 'メロディコピー',
+    shortTitle: 'メロディ',
+    description: '聞いたメロディを歌い返そう',
+    color: '#ffb020',
+    category: 'voice',
+    skill: 'melody',
+  },
 ]
 
 /** スコアを記録する全ゲーム */
 export const GAMES: GameMeta[] = [...VOICE_GAMES, ...EAR_GAMES]
 
 export const MONITOR: GameMeta = {
-  id: 'monitor', to: '/monitor', icon: 'wave', title: 'ピッチモニター', shortTitle: 'モニター', description: 'マイクと声の高さをチェック', color: '#7c5cff', category: 'voice', skill: 'voice',
+  id: 'monitor',
+  to: '/monitor',
+  icon: 'wave',
+  title: 'ピッチモニター',
+  shortTitle: 'モニター',
+  description: 'マイクと声の高さをチェック',
+  color: '#7c5cff',
+  category: 'voice',
+  skill: 'voice',
 }
 
 export function gameMeta(id: RankedGameId): GameMeta {

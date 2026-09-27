@@ -11,25 +11,28 @@ import { MyPage } from './pages/MyPage'
 import { RankingPage } from './pages/RankingPage'
 import { VoiceFlightPage } from './pages/VoiceFlightPage'
 
-export const router = createBrowserRouter([
+export const router = createBrowserRouter(
+  [
+    {
+      path: '/',
+      element: <Layout />,
+      children: [
+        { index: true, element: <HomePage /> },
+        { path: 'monitor', element: <PitchMonitorPage /> },
+        { path: 'target', element: <PitchTargetPage /> },
+        { path: 'flight', element: <VoiceFlightPage /> },
+        { path: 'melody', element: <MelodyCopyPage /> },
+        { path: 'ear/highlow', element: <HighLowPage /> },
+        { path: 'ear/distance', element: <DistancePage /> },
+        { path: 'ear/memory', element: <MemoryPage /> },
+        { path: 'ranking', element: <RankingPage /> },
+        { path: 'mypage', element: <MyPage /> },
+        { path: '*', element: <HomePage /> },
+      ],
+    },
+  ],
   {
-    path: '/',
-    element: <Layout />,
-    children: [
-      { index: true, element: <HomePage /> },
-      { path: 'monitor', element: <PitchMonitorPage /> },
-      { path: 'target', element: <PitchTargetPage /> },
-      { path: 'flight', element: <VoiceFlightPage /> },
-      { path: 'melody', element: <MelodyCopyPage /> },
-      { path: 'ear/highlow', element: <HighLowPage /> },
-      { path: 'ear/distance', element: <DistancePage /> },
-      { path: 'ear/memory', element: <MemoryPage /> },
-      { path: 'ranking', element: <RankingPage /> },
-      { path: 'mypage', element: <MyPage /> },
-      { path: '*', element: <HomePage /> },
-    ],
+    // vite.config.ts の base と揃える (末尾の / は除く)
+    basename: import.meta.env.BASE_URL.replace(/\/$/, '') || '/',
   },
-], {
-  // vite.config.ts の base と揃える (末尾の / は除く)
-  basename: import.meta.env.BASE_URL.replace(/\/$/, '') || '/',
-})
+)

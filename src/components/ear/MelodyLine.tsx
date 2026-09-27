@@ -22,10 +22,30 @@ export function MelodyLine({ midis, semitonePx, color = '#7c5cff', active = -1, 
   const points = midis.map((m, i) => `${x(i)},${y(m)}`).join(' ')
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="h-auto w-full" aria-hidden>
-      {!hidden && <polyline points={points} fill="none" stroke={color} strokeOpacity={0.45} strokeWidth={5} strokeLinecap="round" strokeLinejoin="round" />}
+      {!hidden && (
+        <polyline
+          points={points}
+          fill="none"
+          stroke={color}
+          strokeOpacity={0.45}
+          strokeWidth={5}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      )}
       {midis.map((m, i) => (
         <g key={i}>
-          {i === active && <circle cx={x(i)} cy={y(m)} r={17} fill={color} opacity={0.25} className="animate-pulse-ring" style={{ transformOrigin: `${x(i)}px ${y(m)}px` }} />}
+          {i === active && (
+            <circle
+              cx={x(i)}
+              cy={y(m)}
+              r={17}
+              fill={color}
+              opacity={0.25}
+              className="animate-pulse-ring"
+              style={{ transformOrigin: `${x(i)}px ${y(m)}px` }}
+            />
+          )}
           <circle
             cx={x(i)}
             cy={y(m)}

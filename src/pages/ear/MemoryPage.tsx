@@ -35,7 +35,9 @@ export function MemoryPage() {
   const [phase, setPhase] = useState<Phase>('intro')
   const [question, setQuestion] = useState<MemoryQuestion | null>(null)
   const [activeNote, setActiveNote] = useState(-1)
-  const [feedback, setFeedback] = useState<{ kind: AnswerKind; gained: number; combo: number; chosen: number } | null>(null)
+  const [feedback, setFeedback] = useState<{ kind: AnswerKind; gained: number; combo: number; chosen: number } | null>(
+    null,
+  )
   const [maxNotes, setMaxNotes] = useState(0)
   const [rank, setRank] = useState<RankResult | null>(null)
   const playback = useRef<MelodyHandle | null>(null)
@@ -122,11 +124,19 @@ export function MemoryPage() {
 
   return (
     <div className="flex flex-col gap-3">
-      <EarHud index={session.index} total={session.total} combo={session.combo} score={session.score} color={meta.color} />
+      <EarHud
+        index={session.index}
+        total={session.total}
+        combo={session.combo}
+        score={session.score}
+        color={meta.color}
+      />
 
       {phase === 'playing' && q && (
         <div className="card flex min-h-[220px] flex-col items-center justify-center gap-3 p-5">
-          <p className="text-sm font-bold text-ink-soft">よく聴いて覚えよう… <DifficultyChip game="memory" /></p>
+          <p className="text-sm font-bold text-ink-soft">
+            よく聴いて覚えよう… <DifficultyChip game="memory" />
+          </p>
           {/* 再生中は形を見せず、何音目かだけを示す */}
           <div className="w-full max-w-sm">
             <MelodyLine midis={q.melody} semitonePx={semitonePx} hidden active={activeNote} color={meta.color} />
@@ -148,8 +158,7 @@ export function MemoryPage() {
             {q.options.map((o, i) => {
               const isAnswer = i === q.answer
               const isChosen = feedback?.chosen === i
-              const state =
-                phase !== 'feedback' ? 'idle' : isAnswer ? 'answer' : isChosen ? 'wrong' : 'dim'
+              const state = phase !== 'feedback' ? 'idle' : isAnswer ? 'answer' : isChosen ? 'wrong' : 'dim'
               return (
                 <button
                   key={i}
@@ -183,7 +192,11 @@ export function MemoryPage() {
 
       {phase === 'feedback' ? (
         <div className="flex gap-3">
-          <button className="btn-soft flex-1 whitespace-nowrap !px-3" disabled={activeNote >= 0} onClick={() => q && void play(q.melody, 'feedback')}>
+          <button
+            className="btn-soft flex-1 whitespace-nowrap !px-3"
+            disabled={activeNote >= 0}
+            onClick={() => q && void play(q.melody, 'feedback')}
+          >
             <Icon name="speaker" size={18} /> もう一度聴く
           </button>
           <button className="btn-primary flex-1 whitespace-nowrap !px-3" onClick={next}>
@@ -206,7 +219,9 @@ export function MemoryPage() {
 
       {phase === 'result' && (
         <ResultModal
-          title={session.correct >= session.total ? 'PERFECT!' : session.correct >= session.total - 2 ? 'GREAT!' : 'GOOD!'}
+          title={
+            session.correct >= session.total ? 'PERFECT!' : session.correct >= session.total - 2 ? 'GREAT!' : 'GOOD!'
+          }
           subtitle={`${levelOption('memory', levelId).label}・${session.correct} / ${session.total} 正解`}
           score={session.score}
           onRetry={start}

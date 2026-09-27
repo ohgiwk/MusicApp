@@ -18,9 +18,20 @@ export function RadarChart({ axes, size = 240 }: { axes: Axis[]; size?: number }
 
   return (
     // 左右の軸ラベルが切れないよう横に余白を取る
-    <svg viewBox={`-40 0 ${size + 80} ${size}`} className="h-auto w-full max-w-[320px]" role="img" aria-label="能力値チャート">
+    <svg
+      viewBox={`-40 0 ${size + 80} ${size}`}
+      className="h-auto w-full max-w-[320px]"
+      role="img"
+      aria-label="能力値チャート"
+    >
       {[25, 50, 75, 100].map((lv) => (
-        <polygon key={lv} points={poly(() => lv)} fill={lv === 100 ? '#f6f3ff' : 'none'} stroke="#2a2350" strokeOpacity={0.1} />
+        <polygon
+          key={lv}
+          points={poly(() => lv)}
+          fill={lv === 100 ? '#f6f3ff' : 'none'}
+          stroke="#2a2350"
+          strokeOpacity={0.1}
+        />
       ))}
       {axes.map((_, i) => {
         const [x, y] = pt(i, 100)
@@ -46,7 +57,14 @@ export function RadarChart({ axes, size = 240 }: { axes: Axis[]; size?: number }
             <text x={lx} y={ly - 5} textAnchor="middle" fontSize={11} fontWeight={800} fill="#2a2350">
               {a.label}
             </text>
-            <text x={lx} y={ly + 10} textAnchor="middle" fontSize={12} fontWeight={800} fill={a.value === null ? '#9a94b8' : a.color}>
+            <text
+              x={lx}
+              y={ly + 10}
+              textAnchor="middle"
+              fontSize={12}
+              fontWeight={800}
+              fill={a.value === null ? '#9a94b8' : a.color}
+            >
               {a.value ?? '—'}
             </text>
           </g>

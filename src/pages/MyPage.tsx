@@ -11,7 +11,13 @@ import { rankingOf, useScoreStore } from '../store/scoreStore'
 import { VOICE_RANGES, useSettingsStore, type VoiceRange } from '../store/settingsStore'
 import { SoundSettings } from '../components/SoundSettings'
 import {
-  STAT_COLORS, STAT_HINTS, STAT_KEYS, STAT_LABELS, computeAbilities, streakOf, useStatsStore,
+  STAT_COLORS,
+  STAT_HINTS,
+  STAT_KEYS,
+  STAT_LABELS,
+  computeAbilities,
+  streakOf,
+  useStatsStore,
 } from '../store/statsStore'
 import { APP_VERSION, formatVersion } from '../update/versionCheck'
 
@@ -30,9 +36,15 @@ export function MyPage() {
     ? Math.round(measured.reduce((a, k) => a + abilities[k].value!, 0) / measured.length)
     : null
   // まだ計測していない能力値を測れるゲームを案内する
-  const unmeasuredKey = (['control', 'melody', 'stability', 'accuracy'] as const).find((k) => abilities[k].value === null)
+  const unmeasuredKey = (['control', 'melody', 'stability', 'accuracy'] as const).find(
+    (k) => abilities[k].value === null,
+  )
   const unmeasuredGame = unmeasuredKey
-    ? GAMES.find((g) => g.id === ({ control: 'flight', melody: 'melody', stability: 'target', accuracy: 'target' } as const)[unmeasuredKey])
+    ? GAMES.find(
+        (g) =>
+          g.id ===
+          ({ control: 'flight', melody: 'melody', stability: 'target', accuracy: 'target' } as const)[unmeasuredKey],
+      )
     : undefined
 
   return (
@@ -60,7 +72,9 @@ export function MyPage() {
         </div>
         <div className="grid items-center gap-4 sm:grid-cols-[260px_1fr]">
           <div className="flex justify-center">
-            <RadarChart axes={STAT_KEYS.map((k) => ({ label: STAT_LABELS[k], value: abilities[k].value, color: STAT_COLORS[k] }))} />
+            <RadarChart
+              axes={STAT_KEYS.map((k) => ({ label: STAT_LABELS[k], value: abilities[k].value, color: STAT_COLORS[k] }))}
+            />
           </div>
           <div className="flex flex-col gap-4">
             {STAT_KEYS.map((k) => (
@@ -81,7 +95,10 @@ export function MyPage() {
             to={unmeasuredGame.to}
             className="mt-4 flex items-center gap-3 rounded-2xl bg-cloud px-4 py-3 text-sm font-bold transition active:scale-[0.98]"
           >
-            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl text-white" style={{ background: unmeasuredGame.color }}>
+            <span
+              className="grid h-9 w-9 shrink-0 place-items-center rounded-xl text-white"
+              style={{ background: unmeasuredGame.color }}
+            >
               <Icon name={unmeasuredGame.icon} size={18} />
             </span>
             <span className="min-w-0 flex-1">
@@ -110,7 +127,10 @@ export function MyPage() {
         <div className="flex flex-col gap-2.5">
           {GAMES.map((g) => (
             <div key={g.id} className="flex items-center gap-2">
-              <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg text-white" style={{ background: g.color }}>
+              <span
+                className="grid h-7 w-7 shrink-0 place-items-center rounded-lg text-white"
+                style={{ background: g.color }}
+              >
                 <Icon name={g.icon} size={14} />
               </span>
               <span className="w-[4.8rem] shrink-0 truncate text-xs font-bold sm:w-32">
@@ -129,7 +149,10 @@ export function MyPage() {
                       <span className="block truncate text-[9px] font-extrabold" style={{ color: lv.color }}>
                         {lv.label}
                       </span>
-                      <span className="block text-sm font-extrabold tabular-nums" style={{ color: best ? g.color : '#c9c3e0' }}>
+                      <span
+                        className="block text-sm font-extrabold tabular-nums"
+                        style={{ color: best ? g.color : '#c9c3e0' }}
+                      >
                         {best?.score ?? '—'}
                       </span>
                     </Link>
@@ -207,7 +230,12 @@ function EarSummary() {
       game: ear[0],
       label: '聞き分けられる音の差',
       value: minDiff !== null ? formatInterval(minDiff) : '—',
-      note: minDiff === null ? 'HIGH or LOW で計測' : minDiff < 100 ? `半音の${minDiff}%の差まで聞き分けた` : '2問連続で正解できた最小の差',
+      note:
+        minDiff === null
+          ? 'HIGH or LOW で計測'
+          : minDiff < 100
+            ? `半音の${minDiff}%の差まで聞き分けた`
+            : '2問連続で正解できた最小の差',
     },
     {
       game: ear[1],
@@ -230,13 +258,23 @@ function EarSummary() {
       </div>
       <div className="grid gap-2 sm:grid-cols-3">
         {items.map((it) => (
-          <Link key={it.label} to={it.game.to} className="flex items-center gap-3 rounded-2xl bg-cloud p-3 sm:flex-col sm:items-start sm:gap-1">
-            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl text-white" style={{ background: it.game.color }}>
+          <Link
+            key={it.label}
+            to={it.game.to}
+            className="flex items-center gap-3 rounded-2xl bg-cloud p-3 sm:flex-col sm:items-start sm:gap-1"
+          >
+            <span
+              className="grid h-9 w-9 shrink-0 place-items-center rounded-xl text-white"
+              style={{ background: it.game.color }}
+            >
               <Icon name={it.game.icon} size={18} />
             </span>
             <span className="min-w-0 flex-1">
               <span className="block text-[11px] font-bold text-ink-soft">{it.label}</span>
-              <span className="block text-lg font-extrabold" style={{ color: it.value === '—' ? '#9a94b8' : it.game.color }}>
+              <span
+                className="block text-lg font-extrabold"
+                style={{ color: it.value === '—' ? '#9a94b8' : it.game.color }}
+              >
                 {it.value}
               </span>
               <span className="block text-[10px] text-ink-soft">{it.note}</span>

@@ -59,8 +59,7 @@ export class PitchSmoother {
     if (this.value !== null && Math.abs(midi - this.value) >= this.jumpSemitones) {
       this.pending.push(midi)
       const consistent =
-        this.pending.length >= this.jumpConfirmFrames &&
-        Math.max(...this.pending) - Math.min(...this.pending) < 1.5
+        this.pending.length >= this.jumpConfirmFrames && Math.max(...this.pending) - Math.min(...this.pending) < 1.5
       if (!consistent) {
         if (this.pending.length > this.jumpConfirmFrames * 2) this.pending.shift()
         return this.value

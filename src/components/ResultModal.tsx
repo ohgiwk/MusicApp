@@ -15,7 +15,16 @@ interface Props {
   retryLabel?: string
 }
 
-export function ResultModal({ title, subtitle, score, children, badge, onRetry, onChangeDifficulty, retryLabel = 'もう一回' }: Props) {
+export function ResultModal({
+  title,
+  subtitle,
+  score,
+  children,
+  badge,
+  onRetry,
+  onChangeDifficulty,
+  retryLabel = 'もう一回',
+}: Props) {
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-ink/40 p-4 backdrop-blur-sm">
       <div className="card animate-pop w-full max-w-sm p-6 text-center">

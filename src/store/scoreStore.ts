@@ -5,8 +5,14 @@ export type RankedGameId = 'target' | 'flight' | 'melody' | 'highlow' | 'distanc
 
 export const RANKED_GAME_IDS: RankedGameId[] = ['target', 'flight', 'melody', 'highlow', 'distance', 'memory']
 
-const emptyRecords = (): Record<RankedGameId, ScoreRecord[]> =>
-  ({ target: [], flight: [], melody: [], highlow: [], distance: [], memory: [] })
+const emptyRecords = (): Record<RankedGameId, ScoreRecord[]> => ({
+  target: [],
+  flight: [],
+  melody: [],
+  highlow: [],
+  distance: [],
+  memory: [],
+})
 
 export interface ScoreRecord {
   id: string
@@ -81,10 +87,19 @@ export const useScoreStore = create<ScoreState>()(
       version: 1,
       // 難易度導入前の記録は「ふつう」として扱う
       migrate: (old) => {
-        const o = (old ?? {}) as { records?: Record<RankedGameId, Omit<ScoreRecord, 'difficulty'>[]>; lastIds?: ScoreState['lastIds'] }
-        const fix = (list?: Omit<ScoreRecord, 'difficulty'>[]) => (list ?? []).map((r) => ({ ...r, difficulty: 'normal' as const }))
+        const o = (old ?? {}) as {
+          records?: Record<RankedGameId, Omit<ScoreRecord, 'difficulty'>[]>
+          lastIds?: ScoreState['lastIds']
+        }
+        const fix = (list?: Omit<ScoreRecord, 'difficulty'>[]) =>
+          (list ?? []).map((r) => ({ ...r, difficulty: 'normal' as const }))
         return {
-          records: { ...emptyRecords(), target: fix(o.records?.target), flight: fix(o.records?.flight), melody: fix(o.records?.melody) },
+          records: {
+            ...emptyRecords(),
+            target: fix(o.records?.target),
+            flight: fix(o.records?.flight),
+            melody: fix(o.records?.melody),
+          },
           lastIds: o.lastIds ?? {},
         } as unknown as ScoreState
       },

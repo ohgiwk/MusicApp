@@ -17,7 +17,9 @@ export function MicPermissionGate({ children }: { children: ReactNode }) {
     <div className="card mx-auto mt-4 flex w-full max-w-md flex-col items-center gap-5 p-6 text-center sm:p-8">
       <div className="relative grid h-24 w-24 place-items-center">
         {!failed && <span className="absolute inset-0 rounded-full bg-grape/30 animate-pulse-ring" />}
-        <span className={`relative grid h-20 w-20 place-items-center rounded-full text-white ${failed ? 'bg-bubble' : 'bg-grape'}`}>
+        <span
+          className={`relative grid h-20 w-20 place-items-center rounded-full text-white ${failed ? 'bg-bubble' : 'bg-grape'}`}
+        >
           <Icon name="mic" size={40} />
         </span>
       </div>
@@ -33,7 +35,11 @@ export function MicPermissionGate({ children }: { children: ReactNode }) {
           <p className="rounded-2xl bg-cloud px-4 py-2 text-sm text-ink-soft">
             静かな場所で、できればイヤホンを使うと判定が安定します
           </p>
-          <button className="btn-primary w-full text-lg" onClick={() => void enable()} disabled={status === 'requesting'}>
+          <button
+            className="btn-primary w-full text-lg"
+            onClick={() => void enable()}
+            disabled={status === 'requesting'}
+          >
             <Icon name="mic" size={20} />
             {status === 'requesting' ? '許可を待っています…' : 'マイクを有効にする'}
           </button>

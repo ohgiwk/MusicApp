@@ -12,7 +12,16 @@ import { ResultModal } from '../../components/ResultModal'
 import { DISTANCE_LEVEL_IDS, DISTANCE_LEVELS, type DistanceLevelId } from '../../games/difficulty'
 import { INTERVAL_NAMES, QUESTIONS, playQuestion } from '../../games/ear/common'
 import {
-  BASE_POINTS, LARGE_MIN, SMALL_MAX, answerId, describe, judge, levelNumber, makeQuestion, optionsFor, type DistanceQuestion,
+  BASE_POINTS,
+  LARGE_MIN,
+  SMALL_MAX,
+  answerId,
+  describe,
+  judge,
+  levelNumber,
+  makeQuestion,
+  optionsFor,
+  type DistanceQuestion,
 } from '../../games/ear/distance'
 import { gameMeta } from '../../games/meta'
 import { useEarSession, type AnswerKind } from '../../hooks/useEarSession'
@@ -37,7 +46,9 @@ export function DistancePage() {
   const [phase, setPhase] = useState<Phase>('intro')
   const [question, setQuestion] = useState<DistanceQuestion | null>(null)
   const [activeNote, setActiveNote] = useState(-1)
-  const [feedback, setFeedback] = useState<{ kind: AnswerKind; gained: number; combo: number; chosen: string } | null>(null)
+  const [feedback, setFeedback] = useState<{ kind: AnswerKind; gained: number; combo: number; chosen: string } | null>(
+    null,
+  )
   const [rank, setRank] = useState<RankResult | null>(null)
   const playback = useRef<MelodyHandle | null>(null)
 
@@ -82,7 +93,14 @@ export function DistancePage() {
     playback.current?.cancel()
     if (session.isLast) {
       const accuracy = (session.correct / session.total) * 100
-      setRank(addScore('distance', level, session.score, `${session.correct}/${session.total} 正解・最大${session.maxCombo}COMBO`))
+      setRank(
+        addScore(
+          'distance',
+          level,
+          session.score,
+          `${session.correct}/${session.total} 正解・最大${session.maxCombo}COMBO`,
+        ),
+      )
       recordPlay('distance', {})
       recordDistance(levelNumber(level), accuracy)
       setPhase('result')
@@ -113,7 +131,13 @@ export function DistancePage() {
 
   return (
     <div className="flex flex-col gap-3">
-      <EarHud index={session.index} total={session.total} combo={session.combo} score={session.score} color={meta.color} />
+      <EarHud
+        index={session.index}
+        total={session.total}
+        combo={session.combo}
+        score={session.score}
+        color={meta.color}
+      />
 
       <div className="card flex min-h-[270px] flex-col items-center justify-center gap-3 p-5">
         {phase === 'feedback' && feedback && q ? (
@@ -131,7 +155,9 @@ export function DistancePage() {
           </>
         ) : (
           <>
-            <p className="text-sm font-bold text-ink-soft">{phase === 'playing' ? 'よく聴いて…' : '音はどう動いた？'}</p>
+            <p className="text-sm font-bold text-ink-soft">
+              {phase === 'playing' ? 'よく聴いて…' : '音はどう動いた？'}
+            </p>
             <div className="flex items-center gap-6">
               {[0, 1].map((i) => (
                 <span
@@ -157,7 +183,11 @@ export function DistancePage() {
 
       {phase === 'feedback' ? (
         <div className="flex gap-3">
-          <button className="btn-soft flex-1 whitespace-nowrap !px-3" disabled={activeNote >= 0} onClick={() => q && void play(q, 'feedback')}>
+          <button
+            className="btn-soft flex-1 whitespace-nowrap !px-3"
+            disabled={activeNote >= 0}
+            onClick={() => q && void play(q, 'feedback')}
+          >
             <Icon name="speaker" size={18} /> 聴き直す
           </button>
           <button className="btn-primary flex-1 whitespace-nowrap !px-3" onClick={next}>
@@ -166,7 +196,9 @@ export function DistancePage() {
         </div>
       ) : (
         <>
-          <div className={`grid gap-2 ${options.length === 2 ? 'grid-cols-2' : options.length === 4 ? 'grid-cols-2' : 'grid-cols-3'}`}>
+          <div
+            className={`grid gap-2 ${options.length === 2 ? 'grid-cols-2' : options.length === 4 ? 'grid-cols-2' : 'grid-cols-3'}`}
+          >
             {options.map((o) => (
               <button
                 key={o.id}
@@ -174,9 +206,17 @@ export function DistancePage() {
                 onClick={() => answer(o.id)}
                 className="btn-soft flex-col !gap-0 !px-2 !py-3 disabled:!opacity-40"
               >
-                {o.arrow && <span className="text-2xl leading-none" style={{ color: meta.color }}>{o.arrow}</span>}
+                {o.arrow && (
+                  <span className="text-2xl leading-none" style={{ color: meta.color }}>
+                    {o.arrow}
+                  </span>
+                )}
                 <span className="whitespace-nowrap text-base">{o.label}</span>
-                {o.sub && <span className="text-xs font-bold" style={{ color: meta.color }}>{o.sub}</span>}
+                {o.sub && (
+                  <span className="text-xs font-bold" style={{ color: meta.color }}>
+                    {o.sub}
+                  </span>
+                )}
               </button>
             ))}
           </div>

@@ -12,7 +12,9 @@ export function UpdateNotice({ aboveTabBar = false }: { aboveTabBar?: boolean })
     <div
       role="status"
       className={`fixed inset-x-0 z-40 flex justify-center px-4 ${
-        aboveTabBar ? 'bottom-[calc(64px+env(safe-area-inset-bottom))] pb-3' : 'bottom-0 pb-[max(env(safe-area-inset-bottom),16px)]'
+        aboveTabBar
+          ? 'bottom-[calc(64px+env(safe-area-inset-bottom))] pb-3'
+          : 'bottom-0 pb-[max(env(safe-area-inset-bottom),16px)]'
       }`}
     >
       {/* スマホ幅では 文言 / ボタン の2段、広い画面では1行 (文言が途中で折り返さないように) */}

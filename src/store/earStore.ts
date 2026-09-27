@@ -31,7 +31,11 @@ export const useEarStore = create<EarState>()(
       recordHighLow: (minCents) =>
         set((s) => ({
           minDiffCents:
-            minCents === null ? s.minDiffCents : s.minDiffCents === null ? minCents : Math.min(s.minDiffCents, minCents),
+            minCents === null
+              ? s.minDiffCents
+              : s.minDiffCents === null
+                ? minCents
+                : Math.min(s.minDiffCents, minCents),
         })),
       recordDistance: (level, accuracy) =>
         set((s) => ({
@@ -48,4 +52,5 @@ export const useEarStore = create<EarState>()(
   ),
 )
 
-export const average = (list: number[]) => (list.length ? Math.round(list.reduce((a, b) => a + b, 0) / list.length) : null)
+export const average = (list: number[]) =>
+  list.length ? Math.round(list.reduce((a, b) => a + b, 0) / list.length) : null

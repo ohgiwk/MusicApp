@@ -22,7 +22,14 @@ export interface PitchFrame {
 }
 
 const EMPTY: PitchFrame = {
-  time: 0, voiced: false, freq: null, midi: null, note: null, rawMidi: null, clarity: 0, rms: 0,
+  time: 0,
+  voiced: false,
+  freq: null,
+  midi: null,
+  note: null,
+  rawMidi: null,
+  clarity: 0,
+  rms: 0,
 }
 
 export const MIN_CLARITY = 0.8

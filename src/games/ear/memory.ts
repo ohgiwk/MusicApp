@@ -22,7 +22,8 @@ export function generateMelody(level: MemoryLevel): number[] {
 }
 
 const stepsOf = (m: number[]) => m.slice(1).map((v, i) => v - m[i])
-const fromSteps = (first: number, steps: number[]) => steps.reduce((acc, s) => [...acc, acc[acc.length - 1] + s], [first])
+const fromSteps = (first: number, steps: number[]) =>
+  steps.reduce((acc, s) => [...acc, acc[acc.length - 1] + s], [first])
 
 /** 2つのメロディの形の違い (始まりをそろえた各音の高さの差の合計) */
 export function shapeDistance(a: number[], b: number[]): number {

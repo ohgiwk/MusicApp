@@ -6,7 +6,13 @@ import { MicPermissionGate } from '../components/MicPermissionGate'
 import { RankBadge } from '../components/RankBadge'
 import { ResultModal } from '../components/ResultModal'
 import {
-  GRADE_STYLE, VIEW_RANGE_CENTS, centsToView, gradeOf, pickTarget, summarize, type Grade,
+  GRADE_STYLE,
+  VIEW_RANGE_CENTS,
+  centsToView,
+  gradeOf,
+  pickTarget,
+  summarize,
+  type Grade,
 } from '../games/pitchTarget/grading'
 import { usePitchDetection, type PitchFrame } from '../hooks/usePitchDetection'
 import { DifficultyChip, DifficultySelect } from '../components/DifficultySelect'
@@ -73,7 +79,14 @@ function PitchTargetGame() {
   }, [target])
 
   const startRound = useCallback((t: number) => {
-    Object.assign(g.current, { hold: 0, inZoneSamples: [], trail: [], cents: null, startedAt: performance.now(), done: false })
+    Object.assign(g.current, {
+      hold: 0,
+      inZoneSamples: [],
+      trail: [],
+      cents: null,
+      startedAt: performance.now(),
+      done: false,
+    })
     setTarget(t)
     setLastGrade(null)
     setPhase('play')
@@ -101,10 +114,13 @@ function PitchTargetGame() {
         setRank(addScore('target', difficulty, Math.round(pts), `${range.label}・PERFECT ×${perfects}`))
         window.setTimeout(() => setPhase('result'), res.grade === 'SKIP' ? 0 : 1100)
       } else {
-        window.setTimeout(() => {
-          setRound((r) => r + 1)
-          startRound(pickTarget(range.min, range.max, level, res.target))
-        }, res.grade === 'SKIP' ? 0 : 1100)
+        window.setTimeout(
+          () => {
+            setRound((r) => r + 1)
+            startRound(pickTarget(range.min, range.max, level, res.target))
+          },
+          res.grade === 'SKIP' ? 0 : 1100,
+        )
       }
     },
     [results, recordPlay, addScore, startRound, range.min, range.max, range.label, difficulty, level],
@@ -176,7 +192,9 @@ function PitchTargetGame() {
           <br />
           光るゾーン（±{HIT_RANGE} cents）に声を <b>{HOLD_MS / 1000}秒</b> キープでクリア！
         </p>
-        <p className="text-sm text-ink-soft">全{ROUNDS}問 / 声の高さ: {range.label}（{range.sub}）</p>
+        <p className="text-sm text-ink-soft">
+          全{ROUNDS}問 / 声の高さ: {range.label}（{range.sub}）
+        </p>
         <DifficultySelect game="target" />
         <button
           className="btn-primary w-full max-w-xs text-lg"
@@ -197,13 +215,23 @@ function PitchTargetGame() {
   const inZone = cents !== null && Math.abs(cents) <= HIT_RANGE
   const out = cents !== null && Math.abs(cents) > VIEW_RANGE_CENTS
   const listening = performance.now() >= s.listenAfter
-  const hint =
-    !listening ? 'お手本を聞いてね…'
-    : cents === null ? '声を出してください'
-    : inZone ? 'キープ！'
-    : Math.abs(cents) > 900 && Math.abs(foldOctave(cents)) < 150
-      ? cents > 0 ? '1オクターブ上かも？ 低く！' : '1オクターブ下かも？ 高く！'
-    : cents > 0 ? (cents > 100 ? 'もっと下！' : 'もう少し下') : cents < -100 ? 'もっと上！' : 'もう少し上'
+  const hint = !listening
+    ? 'お手本を聞いてね…'
+    : cents === null
+      ? '声を出してください'
+      : inZone
+        ? 'キープ！'
+        : Math.abs(cents) > 900 && Math.abs(foldOctave(cents)) < 150
+          ? cents > 0
+            ? '1オクターブ上かも？ 低く！'
+            : '1オクターブ下かも？ 高く！'
+          : cents > 0
+            ? cents > 100
+              ? 'もっと下！'
+              : 'もう少し下'
+            : cents < -100
+              ? 'もっと上！'
+              : 'もう少し上'
 
   return (
     <div className="flex flex-col gap-3">
@@ -222,7 +250,9 @@ function PitchTargetGame() {
         </div>
         <span className="flex items-center gap-1.5">
           <DifficultyChip game="target" />
-          <span className="chip bg-white text-ink">{round + 1} / {ROUNDS}</span>
+          <span className="chip bg-white text-ink">
+            {round + 1} / {ROUNDS}
+          </span>
         </span>
       </div>
 
@@ -285,7 +315,10 @@ function PitchTargetGame() {
           >
             <HoldRing progress={s.hold} color={inZone ? '#22c98c' : cents > 0 ? '#ff5fa2' : '#22b8e8'} />
             {out && (
-              <span className="absolute left-1/2 -translate-x-1/2 text-2xl font-extrabold text-ink/60" style={{ top: cents > 0 ? 44 : -40 }}>
+              <span
+                className="absolute left-1/2 -translate-x-1/2 text-2xl font-extrabold text-ink/60"
+                style={{ top: cents > 0 ? 44 : -40 }}
+              >
                 {cents > 0 ? '▼' : '▲'}
               </span>
             )}
@@ -300,12 +333,18 @@ function PitchTargetGame() {
 
         {/* ホールドゲージ */}
         <div className="absolute inset-x-3 top-3 h-2 overflow-hidden rounded-full bg-white/80">
-          <div className="h-full rounded-full bg-mint transition-[width] duration-75" style={{ width: `${s.hold * 100}%` }} />
+          <div
+            className="h-full rounded-full bg-mint transition-[width] duration-75"
+            style={{ width: `${s.hold * 100}%` }}
+          />
         </div>
 
         {phase === 'clear' && lastGrade && (
           <div className="absolute inset-0 grid place-items-center bg-white/40">
-            <p className="animate-pop text-5xl font-extrabold sm:text-6xl" style={{ color: GRADE_STYLE[lastGrade].color }}>
+            <p
+              className="animate-pop text-5xl font-extrabold sm:text-6xl"
+              style={{ color: GRADE_STYLE[lastGrade].color }}
+            >
               {lastGrade}
             </p>
           </div>
@@ -330,13 +369,23 @@ function PitchTargetGame() {
       </div>
 
       {phase === 'result' && (
-        <ResultModal title={totalScore >= 90 ? 'PERFECT!' : totalScore >= 70 ? 'GREAT!' : 'GOOD!'} score={totalScore} onRetry={restart} onChangeDifficulty={backToIntro} subtitle={DIFFICULTY_LABELS[difficulty]} badge={<RankBadge result={rank} game="target" />}>
+        <ResultModal
+          title={totalScore >= 90 ? 'PERFECT!' : totalScore >= 70 ? 'GREAT!' : 'GOOD!'}
+          score={totalScore}
+          onRetry={restart}
+          onChangeDifficulty={backToIntro}
+          subtitle={DIFFICULTY_LABELS[difficulty]}
+          badge={<RankBadge result={rank} game="target" />}
+        >
           <ul className="flex flex-col gap-1.5">
             {results.map((r, i) => (
               <li key={i} className="flex items-center justify-between rounded-xl bg-cloud px-3 py-1.5 text-sm">
                 <span className="font-bold">{noteFromMidi(r.target).label}</span>
                 <span className="text-ink-soft">{r.grade === 'SKIP' ? '—' : `平均 ${r.meanAbs.toFixed(0)} cents`}</span>
-                <span className="font-extrabold" style={{ color: r.grade === 'SKIP' ? '#9a94b8' : GRADE_STYLE[r.grade].color }}>
+                <span
+                  className="font-extrabold"
+                  style={{ color: r.grade === 'SKIP' ? '#9a94b8' : GRADE_STYLE[r.grade].color }}
+                >
                   {r.grade}
                 </span>
               </li>
@@ -355,8 +404,16 @@ function HoldRing({ progress, color }: { progress: number; color: string }) {
     <svg width={60} height={60} viewBox="0 0 60 60" className="drop-shadow-md">
       <circle cx={30} cy={30} r={r} fill="none" stroke="white" strokeWidth={6} />
       <circle
-        cx={30} cy={30} r={r} fill="none" stroke={color} strokeWidth={6} strokeLinecap="round"
-        strokeDasharray={circ} strokeDashoffset={circ * (1 - progress)} transform="rotate(-90 30 30)"
+        cx={30}
+        cy={30}
+        r={r}
+        fill="none"
+        stroke={color}
+        strokeWidth={6}
+        strokeLinecap="round"
+        strokeDasharray={circ}
+        strokeDashoffset={circ * (1 - progress)}
+        transform="rotate(-90 30 30)"
       />
       <circle cx={30} cy={30} r={14} fill={color} />
       <circle cx={25} cy={25} r={4} fill="white" opacity={0.6} />
