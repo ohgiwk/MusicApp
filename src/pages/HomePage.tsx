@@ -4,9 +4,9 @@ import { GameCard } from '../components/GameCard'
 import { Icon } from '../components/Icon'
 import { useState } from 'react'
 import { EAR_GAMES, GAMES, MONITOR, SKILLS, VOICE_GAMES, gameMeta, scoreUnit, type GameMeta, type Skill } from '../games/meta'
-import { levelOption, type LevelGameId } from '../games/difficulty'
+import { levelOption } from '../games/difficulty'
 import { useSettingsStore } from '../store/settingsStore'
-import { rankingOf, useScoreStore } from '../store/scoreStore'
+import { rankingOf, useScoreStore, type RankedGameId } from '../store/scoreStore'
 import { isDoneToday, useStatsStore } from '../store/statsStore'
 
 // 今日のトレーニングメニュー: 聴く → 声を出す → メロディ の順 (日替わり)
@@ -26,18 +26,19 @@ export function HomePage() {
   const next = menu.find((g) => !isDoneToday(todayDone, g.id))
   const [filter, setFilter] = useState<Filter>('all')
 
+  /** ミニゲームのカード (ピッチモニターはツール欄で別に出す) */
   const card = (g: GameMeta, badge?: string) => {
-    if (g.id === 'monitor') return <GameCard key={g.id} {...g} compact />
+    const id = g.id as RankedGameId
     // 今選んでいる難易度 (レベル) での自己ベストを出す
-    const level = levelOption(g.id as LevelGameId, difficulty?.[g.id as LevelGameId])
-    const best = rankingOf(records[g.id], level.id)[0]
+    const level = levelOption(id, difficulty?.[id])
+    const best = rankingOf(records[id], level.id)[0]
     return (
       <GameCard
         key={g.id}
         {...g}
         badge={badge}
         done={isDoneToday(todayDone, g.id)}
-        best={best ? `ベスト ${best.score}${scoreUnit(g.id)}（${level.label}）` : undefined}
+        best={best ? `ベスト ${best.score}${scoreUnit(id)}（${level.label}）` : undefined}
       />
     )
   }
@@ -123,16 +124,24 @@ export function HomePage() {
                 <span className="text-xs font-bold text-ink-soft">歌って音程を合わせる</span>
               </div>
               <div className="grid gap-3 sm:grid-cols-3">{VOICE_GAMES.map((g) => card(g))}</div>
-              <div className="mt-3">{card(MONITOR)}</div>
             </div>
           </>
         ) : (
           <div className="grid gap-3 sm:grid-cols-3">
-            {[...GAMES, MONITOR]
+            {GAMES
               .filter((g) => g.skill === filter)
               .map((g) => card(g, g.category === 'ear' ? '👂 耳トレ' : '🎤 声トレ'))}
           </div>
         )}
+      </section>
+
+      {/* ツール (ゲームではないのでミニゲームとは分ける) */}
+      <section>
+        <div className="mb-2 flex items-baseline gap-2 px-1">
+          <h2 className="font-extrabold">ツール</h2>
+          <span className="text-xs font-bold text-ink-soft">声トレの前にマイクと声をチェック</span>
+        </div>
+        <GameCard {...MONITOR} compact />
       </section>
     </div>
   )
