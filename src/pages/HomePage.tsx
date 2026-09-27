@@ -26,13 +26,13 @@ export function HomePage() {
 
   return (
     <div className="flex flex-col gap-5 pt-2">
-      <section className="flex items-center gap-4">
-        <div className="animate-float grid h-16 w-16 shrink-0 place-items-center rounded-3xl bg-gradient-to-br from-grape to-bubble text-white shadow-lg">
-          <Icon name="mic" size={34} />
+      <section className="flex items-center gap-3 sm:gap-4">
+        <div className="animate-float grid h-14 w-14 shrink-0 place-items-center rounded-3xl sm:h-16 sm:w-16 bg-gradient-to-br from-grape to-bubble text-white shadow-lg">
+          <Icon name="mic" size={30} />
         </div>
         <div className="min-w-0 flex-1">
           <p className="text-sm font-bold text-ink-soft">こえあそび</p>
-          <h1 className="text-2xl font-extrabold sm:text-3xl">今日も声で遊ぼう！</h1>
+          <h1 className="whitespace-nowrap text-[22px] font-extrabold sm:text-3xl">今日も声で遊ぼう！</h1>
         </div>
         <BgmToggle />
       </section>

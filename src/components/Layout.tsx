@@ -1,8 +1,12 @@
+import { useState } from 'react'
 import { Link, Outlet, useLocation } from 'react-router'
+import { isAudioUnlocked } from '../audio/audioUnlock'
 import { useBgm } from '../hooks/useBgm'
 import { Icon } from './Icon'
 import { TABS, TabBar } from './TabBar'
+import { StartScreen } from './StartScreen'
 import { UpdateNotice } from './UpdateNotice'
+import { useSettingsStore } from '../store/settingsStore'
 
 const TITLES: Record<string, string> = {
   '/monitor': 'ピッチモニター',
@@ -20,6 +24,10 @@ export function Layout() {
   const isTab = TABS.some((t) => t.to === pathname)
   // BGM はメニュー (タブ画面) だけ。ゲーム画面ではマイクが拾わないよう止める
   useBgm(isTab)
+  // 起動時 (メニュー画面を開いたとき) だけスタート画面を出し、そのタップで BGM を鳴らす。
+  // BGM オフの人や、ゲーム画面を直接開いたときは出さない
+  const bgmEnabled = useSettingsStore((s) => s.bgmEnabled)
+  const [showStart, setShowStart] = useState(() => isTab && bgmEnabled && !isAudioUnlocked())
 
   return (
     <div
@@ -45,6 +53,7 @@ export function Layout() {
       </main>
       {isTab && <TabBar />}
       <UpdateNotice aboveTabBar={isTab} />
+      {showStart && <StartScreen onStart={() => setShowStart(false)} />}
     </div>
   )
 }

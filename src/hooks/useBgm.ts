@@ -1,24 +1,7 @@
 import { useEffect, useState } from 'react'
+import { isAudioUnlocked, onAudioUnlocked } from '../audio/audioUnlock'
 import { bgm } from '../audio/bgm'
 import { useSettingsStore } from '../store/settingsStore'
-
-/**
- * ブラウザはユーザー操作があるまで音を出せないため、最初のタップ/キー入力を待つ。
- * (操作前に AudioContext を作ると警告が出るので、作成自体も操作後にする)
- */
-let unlocked = false
-const unlockListeners = new Set<() => void>()
-function onFirstGesture() {
-  if (unlocked) return
-  unlocked = true
-  window.removeEventListener('pointerdown', onFirstGesture, true)
-  window.removeEventListener('keydown', onFirstGesture, true)
-  unlockListeners.forEach((fn) => fn())
-}
-if (typeof window !== 'undefined') {
-  window.addEventListener('pointerdown', onFirstGesture, true)
-  window.addEventListener('keydown', onFirstGesture, true)
-}
 
 /**
  * active の間だけ BGM を流す (メニュー画面用)。
@@ -27,14 +10,13 @@ if (typeof window !== 'undefined') {
 export function useBgm(active: boolean) {
   const enabled = useSettingsStore((s) => s.bgmEnabled)
   const volume = useSettingsStore((s) => s.bgmVolume)
-  const [ready, setReady] = useState(unlocked)
+  // ブラウザの自動再生制限: 最初のタップ等で音が解禁されるまで待つ
+  const [ready, setReady] = useState(isAudioUnlocked)
   const [visible, setVisible] = useState(() => document.visibilityState === 'visible')
 
   useEffect(() => {
     if (ready) return
-    const fn = () => setReady(true)
-    unlockListeners.add(fn)
-    return () => void unlockListeners.delete(fn)
+    return onAudioUnlocked(() => setReady(true))
   }, [ready])
 
   useEffect(() => {
