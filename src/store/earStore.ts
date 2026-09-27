@@ -48,7 +48,17 @@ export const useEarStore = create<EarState>()(
           memoryRecent: pushRecent(s.memoryRecent, accuracy),
         })),
     }),
-    { name: 'koeasobi-ear' },
+    {
+      name: 'koeasobi-ear',
+      version: 0,
+      partialize: ({ minDiffCents, distanceLevelCleared, distanceRecent, memoryMaxNotes, memoryRecent }) => ({
+        minDiffCents,
+        distanceLevelCleared,
+        distanceRecent,
+        memoryMaxNotes,
+        memoryRecent,
+      }),
+    },
   ),
 )
 

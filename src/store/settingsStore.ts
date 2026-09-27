@@ -27,8 +27,30 @@ interface SettingsState {
   setNoiseGate: (v: number) => void
 }
 
+/** localStorage に保存する部分 */
+export type PersistedSettings = Pick<SettingsState, 'range' | 'noiseGate' | 'levels' | 'bgmEnabled' | 'bgmVolume'>
+
+const DEFAULT_SETTINGS: PersistedSettings = {
+  range: 'low',
+  noiseGate: 0.01,
+  levels: {},
+  bgmEnabled: true,
+  bgmVolume: 0.5,
+}
+
+/**
+ * 保存データの移行。
+ * v0: レベルを difficulty という名前で保存していた → levels へ
+ */
+export function migrateSettings(old: unknown, version: number): PersistedSettings {
+  const o = (old ?? {}) as Partial<PersistedSettings> & { difficulty?: PersistedSettings['levels'] }
+  const { difficulty, ...rest } = o
+  const levels = version < 1 ? { ...difficulty, ...rest.levels } : (rest.levels ?? {})
+  return { ...DEFAULT_SETTINGS, ...rest, levels }
+}
+
 export const useSettingsStore = create<SettingsState>()(
-  persist(
+  persist<SettingsState, [], [], PersistedSettings>(
     (set) => ({
       range: 'low',
       noiseGate: 0.01,
@@ -44,15 +66,14 @@ export const useSettingsStore = create<SettingsState>()(
     {
       name: 'koeasobi-settings',
       version: 1,
-      // v0 はレベルを difficulty という名前で保存していた
-      migrate: (old, version) => {
-        const o = (old ?? {}) as Partial<SettingsState> & { difficulty?: SettingsState['levels'] }
-        if (version < 1) {
-          const { difficulty, ...rest } = o
-          return { ...rest, levels: { ...difficulty, ...rest.levels } } as SettingsState
-        }
-        return o as SettingsState
-      },
+      partialize: (s) => ({
+        range: s.range,
+        noiseGate: s.noiseGate,
+        levels: s.levels,
+        bgmEnabled: s.bgmEnabled,
+        bgmVolume: s.bgmVolume,
+      }),
+      migrate: migrateSettings,
     },
   ),
 )

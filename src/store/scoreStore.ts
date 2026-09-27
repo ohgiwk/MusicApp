@@ -53,9 +53,36 @@ export function rankingOf(records: ScoreRecord[] | undefined, difficulty: string
   return (records ?? []).filter((r) => r.difficulty === difficulty).sort(byScore)
 }
 
+/** localStorage に保存する部分 */
+export type PersistedScores = Pick<ScoreState, 'records' | 'lastIds'>
+
+type StoredRecord = Omit<ScoreRecord, 'difficulty'> & { difficulty?: string }
+
+/**
+ * 保存データの移行。
+ * v0: 難易度導入前の記録 (difficulty なし) は「ふつう」として扱う
+ */
+export function migrateScores(old: unknown): PersistedScores {
+  const o = (old ?? {}) as {
+    records?: Partial<Record<RankedGameId, StoredRecord[]>>
+    lastIds?: PersistedScores['lastIds']
+  }
+  const records = emptyRecords()
+  for (const id of RANKED_GAME_IDS) {
+    records[id] = (o.records?.[id] ?? []).map((r) => ({ ...r, difficulty: r.difficulty ?? 'normal' }))
+  }
+  return { records, lastIds: o.lastIds ?? {} }
+}
+
+/** 後から追加したゲームの記録欄が保存データに無くても壊れないよう、初期値に重ねる */
+export function mergeScores(persisted: unknown, current: ScoreState): ScoreState {
+  const p = (persisted ?? {}) as Partial<PersistedScores>
+  return { ...current, ...p, records: { ...current.records, ...(p.records ?? {}) } }
+}
+
 /** 端末内 (localStorage) に保存する自己ランキング */
 export const useScoreStore = create<ScoreState>()(
-  persist(
+  persist<ScoreState, [], [], PersistedScores>(
     (set, get) => ({
       records: emptyRecords(),
       lastIds: {},
@@ -85,29 +112,9 @@ export const useScoreStore = create<ScoreState>()(
     {
       name: 'koeasobi-scores',
       version: 1,
-      // 難易度導入前の記録は「ふつう」として扱う
-      migrate: (old) => {
-        const o = (old ?? {}) as {
-          records?: Record<RankedGameId, Omit<ScoreRecord, 'difficulty'>[]>
-          lastIds?: ScoreState['lastIds']
-        }
-        const fix = (list?: Omit<ScoreRecord, 'difficulty'>[]) =>
-          (list ?? []).map((r) => ({ ...r, difficulty: 'normal' as const }))
-        return {
-          records: {
-            ...emptyRecords(),
-            target: fix(o.records?.target),
-            flight: fix(o.records?.flight),
-            melody: fix(o.records?.melody),
-          },
-          lastIds: o.lastIds ?? {},
-        } as unknown as ScoreState
-      },
-      // 後から追加したゲームの記録欄が保存データに無くても壊れないよう、初期値に重ねる
-      merge: (persisted, current) => {
-        const p = (persisted ?? {}) as Partial<ScoreState>
-        return { ...current, ...p, records: { ...current.records, ...(p.records ?? {}) } }
-      },
+      partialize: (s) => ({ records: s.records, lastIds: s.lastIds }),
+      migrate: migrateScores,
+      merge: mergeScores,
     },
   ),
 )

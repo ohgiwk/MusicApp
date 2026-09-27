@@ -1,3 +1,4 @@
+/// <reference types="vitest/config" />
 import { defineConfig, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
@@ -23,4 +24,8 @@ export default defineConfig(({ command }) => ({
   define: { __APP_VERSION__: JSON.stringify(APP_VERSION) },
   plugins: [react(), tailwindcss(), versionJson()],
   server: { host: true },
+  test: {
+    include: ['src/**/*.test.ts'],
+    setupFiles: ['src/test/setup.ts'],
+  },
 }))

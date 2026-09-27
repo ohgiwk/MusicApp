@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { Link, Outlet, useLocation } from 'react-router'
 import { isAudioUnlocked } from '../audio/audioUnlock'
 import { useBgm } from '../hooks/useBgm'
+import { useMicLifecycle } from '../hooks/useMicrophone'
+import { MONITOR, VOICE_GAMES } from '../games/meta'
 import { Icon } from './Icon'
 import { TabBar } from './TabBar'
 import { TABS } from './tabs'
@@ -28,6 +30,8 @@ export function Layout() {
   const isTab = TABS.some((t) => t.to === pathname)
   // BGM はメニュー (タブ画面) だけ。ゲーム画面ではマイクが拾わないよう止める
   useBgm(isTab)
+  // マイクは声トレとピッチモニターでだけ使う
+  useMicLifecycle([...VOICE_GAMES, MONITOR].some((g) => g.to === pathname))
   // 起動時 (メニュー画面を開いたとき) だけスタート画面を出し、そのタップで BGM を鳴らす。
   // BGM オフの人や、ゲーム画面を直接開いたときは出さない
   const bgmEnabled = useSettingsStore((s) => s.bgmEnabled)

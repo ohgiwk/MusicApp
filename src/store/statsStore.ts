@@ -55,6 +55,24 @@ const localDay = (d = new Date()) =>
 
 const emptySamples = (): Record<StatKey, StatSample[]> => ({ accuracy: [], stability: [], control: [], melody: [] })
 
+/** localStorage に保存する部分 */
+export type PersistedStats = Pick<StatsState, 'samples' | 'plays' | 'playDays' | 'todayDone'>
+
+/**
+ * 保存データの移行。
+ * v1 以前: ダミーの能力値を持っていたので破棄し、実測だけで始め直す (今日の進み具合は残す)
+ */
+export function migrateStats(old: unknown, version: number): PersistedStats {
+  const o = (old ?? {}) as Partial<PersistedStats>
+  if (version < 2) return { samples: emptySamples(), plays: 0, playDays: [], todayDone: o.todayDone ?? [] }
+  return {
+    samples: { ...emptySamples(), ...o.samples },
+    plays: o.plays ?? 0,
+    playDays: o.playDays ?? [],
+    todayDone: o.todayDone ?? [],
+  }
+}
+
 /** プレイ回数・プレイした日・今日のトレーニングの更新 */
 function playedUpdate(s: Pick<StatsState, 'plays' | 'playDays' | 'todayDone'>, gameId: string) {
   const day = localDay()
@@ -66,7 +84,7 @@ function playedUpdate(s: Pick<StatsState, 'plays' | 'playDays' | 'todayDone'>, g
 }
 
 export const useStatsStore = create<StatsState>()(
-  persist(
+  persist<StatsState, [], [], PersistedStats>(
     (set) => ({
       samples: emptySamples(),
       plays: 0,
@@ -89,16 +107,8 @@ export const useStatsStore = create<StatsState>()(
     {
       name: 'koeasobi-stats',
       version: 2,
-      // v1 はダミーの能力値を持っていたので破棄し、実測だけで始め直す
-      migrate: (old) => {
-        const o = (old ?? {}) as Partial<StatsState>
-        return {
-          samples: emptySamples(),
-          plays: 0,
-          playDays: [],
-          todayDone: o.todayDone ?? [],
-        } as unknown as StatsState
-      },
+      partialize: (s) => ({ samples: s.samples, plays: s.plays, playDays: s.playDays, todayDone: s.todayDone }),
+      migrate: migrateStats,
     },
   ),
 )

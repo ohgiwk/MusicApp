@@ -26,6 +26,7 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npm run format:check
+      - run: npm test
       - run: npm run build
       # SPA のため、直接アクセスされたパス (/MusicApp/flight など) も index.html で受ける
       - run: cp dist/index.html dist/404.html

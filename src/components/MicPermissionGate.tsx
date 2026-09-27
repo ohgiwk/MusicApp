@@ -1,15 +1,31 @@
-import type { ReactNode } from 'react'
+import { useEffect, type ReactNode } from 'react'
 import { Link } from 'react-router'
 import { useMicrophone } from '../hooks/useMicrophone'
 import { Icon } from './Icon'
 
 /**
  * マイクが有効になるまで説明画面を出す。
- * ボタンを押すまで getUserMedia は呼ばない。
+ * 初回はボタンを押すまで getUserMedia は呼ばない。このセッションで一度許可されていれば、説明を出さずに自動で再開する。
  */
 export function MicPermissionGate({ children }: { children: ReactNode }) {
-  const { status, errorMessage, enable } = useMicrophone()
+  const { status, errorMessage, granted, enable } = useMicrophone()
+
+  useEffect(() => {
+    if (granted && status === 'idle') void enable()
+  }, [granted, status, enable])
+
   if (status === 'ready') return <>{children}</>
+
+  if (granted && (status === 'idle' || status === 'requesting')) {
+    return (
+      <div className="mt-10 flex flex-col items-center gap-3 text-ink-soft" role="status">
+        <span className="grid h-14 w-14 animate-pulse place-items-center rounded-full bg-grape/15 text-grape">
+          <Icon name="mic" size={28} />
+        </span>
+        <p className="text-sm font-bold">マイクを準備しています…</p>
+      </div>
+    )
+  }
 
   const failed = status === 'denied' || status === 'unsupported' || status === 'notfound' || status === 'error'
 
