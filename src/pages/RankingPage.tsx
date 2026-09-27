@@ -1,12 +1,11 @@
 import { Link, useSearchParams } from 'react-router'
 import { Icon } from '../components/Icon'
-import { GAMES } from '../games/meta'
-import { DIFFICULTIES, DIFFICULTY_COLORS, DIFFICULTY_LABELS, type Difficulty } from '../games/difficulty'
-import { useSettingsStore } from '../store/settingsStore'
-import { RANKING_SIZE, rankingOf, useScoreStore, type RankedGameId } from '../store/scoreStore'
+import { GAMES, gameMeta, scoreUnit } from '../games/meta'
+import { GAME_LEVELS, levelOption } from '../games/difficulty'
+import { useLevel } from '../store/settingsStore'
+import { RANKED_GAME_IDS, RANKING_SIZE, rankingOf, useScoreStore, type RankedGameId } from '../store/scoreStore'
 
 const MEDALS = ['#ffb020', '#a9a6c4', '#d9905a']
-const SCORE_UNIT: Record<RankedGameId, string> = { target: '点', flight: 'pt', melody: '点' }
 
 function formatDate(iso: string) {
   const d = new Date(iso)
@@ -14,23 +13,21 @@ function formatDate(iso: string) {
   return `${d.getMonth() + 1}/${d.getDate()} ${p(d.getHours())}:${p(d.getMinutes())}`
 }
 
-function isDifficulty(v: string | null): v is Difficulty {
-  return v === 'easy' || v === 'normal' || v === 'hard'
-}
-
 function isRankedGame(v: string | null): v is RankedGameId {
-  return v === 'target' || v === 'flight' || v === 'melody'
+  return RANKED_GAME_IDS.includes(v as RankedGameId)
 }
 
 export function RankingPage() {
   const [params, setParams] = useSearchParams()
   const q = params.get('game')
   const game: RankedGameId = isRankedGame(q) ? q : 'target'
-  const meta = GAMES.find((g) => g.id === game)!
+  const meta = gameMeta(game)
   // 難易度の指定がなければ、そのゲームで今選んでいる難易度を表示する
-  const selected = useSettingsStore((s) => s.difficulty?.[game] ?? 'normal')
+  const selected = useLevel(game)
   const qd = params.get('diff')
-  const difficulty: Difficulty = isDifficulty(qd) ? qd : selected
+  const levels = GAME_LEVELS[game]
+  const current = levelOption(game, levels.some((l) => l.id === qd) ? qd! : selected)
+  const difficulty = current.id
   const all = useScoreStore((s) => s.records[game])
   const records = rankingOf(all, difficulty)
   const lastId = useScoreStore((s) => s.lastIds[game])
@@ -54,15 +51,23 @@ export function RankingPage() {
               style={active ? { background: g.color } : undefined}
             >
               <Icon name={g.icon} size={18} />
-              {g.title}
+              <span className="whitespace-nowrap">
+                <span className="sm:hidden">{g.shortTitle}</span>
+                <span className="hidden sm:inline">{g.title}</span>
+              </span>
             </button>
           )
         })}
       </div>
 
       {/* 難易度切り替え */}
-      <div className="grid grid-cols-3 gap-1.5 rounded-2xl bg-white/60 p-1" role="tablist" aria-label="難易度">
-        {DIFFICULTIES.map((d) => {
+      <div
+        className="grid gap-1.5 rounded-2xl bg-white/60 p-1"
+        style={{ gridTemplateColumns: `repeat(${levels.length}, minmax(0, 1fr))` }}
+        role="tablist"
+        aria-label="難易度"
+      >
+        {levels.map(({ id: d, label, color }) => {
           const active = d === difficulty
           const count = rankingOf(all, d).length
           return (
@@ -72,9 +77,9 @@ export function RankingPage() {
               aria-selected={active}
               onClick={() => setParams({ game, diff: d }, { replace: true })}
               className={`whitespace-nowrap rounded-xl py-1.5 text-xs font-extrabold transition ${active ? 'text-white shadow' : 'text-ink-soft'}`}
-              style={active ? { background: DIFFICULTY_COLORS[d] } : undefined}
+              style={active ? { background: color } : undefined}
             >
-              {DIFFICULTY_LABELS[d]}
+              {label}
               {count > 0 && <span className="ml-1 opacity-75">{count}</span>}
             </button>
           )
@@ -85,8 +90,8 @@ export function RankingPage() {
         <div className="flex items-center justify-between px-5 pb-2 pt-4">
           <h2 className="font-extrabold">
             自己ベスト TOP{RANKING_SIZE}
-            <span className="ml-2 text-xs font-bold" style={{ color: DIFFICULTY_COLORS[difficulty] }}>
-              {DIFFICULTY_LABELS[difficulty]}
+            <span className="ml-2 text-xs font-bold" style={{ color: current.color }}>
+              {current.label}
             </span>
           </h2>
           <Link to={meta.to} className="chip text-white" style={{ background: meta.color }}>
@@ -99,7 +104,7 @@ export function RankingPage() {
             <span className="grid h-14 w-14 place-items-center rounded-full bg-cloud text-ink-soft">
               <Icon name="trophy" size={28} />
             </span>
-            <p className="font-bold text-ink-soft">「{DIFFICULTY_LABELS[difficulty]}」の記録はまだありません</p>
+            <p className="font-bold text-ink-soft">「{current.label}」の記録はまだありません</p>
             <Link to={meta.to} className="btn-primary">
               {meta.title}で遊ぶ
             </Link>
@@ -128,7 +133,7 @@ export function RankingPage() {
                   </div>
                   <p className="shrink-0 text-2xl font-extrabold tabular-nums" style={{ color: i === 0 ? meta.color : undefined }}>
                     {r.score}
-                    <span className="ml-0.5 text-xs text-ink-soft">{SCORE_UNIT[game]}</span>
+                    <span className="ml-0.5 text-xs text-ink-soft">{scoreUnit(game)}</span>
                   </p>
                 </li>
               )
@@ -143,10 +148,10 @@ export function RankingPage() {
           <button
             className="underline"
             onClick={() => {
-              if (window.confirm(`${meta.title}（${DIFFICULTY_LABELS[difficulty]}）の記録をすべて消去しますか？`)) clear(game, difficulty)
+              if (window.confirm(`${meta.title}（${current.label}）の記録をすべて消去しますか？`)) clear(game, difficulty)
             }}
           >
-            {meta.title}（{DIFFICULTY_LABELS[difficulty]}）の記録を消去
+            {meta.title}（{current.label}）の記録を消去
           </button>
         )}
       </div>

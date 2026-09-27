@@ -4,8 +4,9 @@ import { midiToFreq } from './pitchUtils'
 /**
  * お手本音の再生。純音だと音高がつかみにくいので、
  * 三角波 + 少しの倍音 + 柔らかいエンベロープで「声っぽい」音にする。
+ * 戻り値を呼ぶと、その音を (予約済みでも) すぐに止める。
  */
-export function playNote(midi: number, durationSec = 1, startAt?: number, volume = 0.25): void {
+export function playNote(midi: number, durationSec = 1, startAt?: number, volume = 0.25): () => void {
   const ctx = getAudioContext()
   const t0 = startAt ?? ctx.currentTime + 0.02
   const freq = midiToFreq(midi)
@@ -26,7 +27,7 @@ export function playNote(midi: number, durationSec = 1, startAt?: number, volume
     ['triangle', 1, 1],
     ['sine', 2, 0.25],
   ]
-  for (const [type, mult, level] of oscs) {
+  const nodes = oscs.map(([type, mult, level]) => {
     const osc = ctx.createOscillator()
     const g = ctx.createGain()
     osc.type = type
@@ -35,12 +36,32 @@ export function playNote(midi: number, durationSec = 1, startAt?: number, volume
     osc.connect(g).connect(filter)
     osc.start(t0)
     osc.stop(t0 + durationSec + 0.2)
+    return osc
+  })
+
+  let stopped = false
+  return () => {
+    if (stopped) return
+    stopped = true
+    const now = ctx.currentTime
+    // プチッという音を避けるため、ごく短くフェードしてから止める
+    gain.gain.cancelScheduledValues(now)
+    gain.gain.setValueAtTime(gain.gain.value, now)
+    gain.gain.linearRampToValueAtTime(0, now + 0.03)
+    nodes.forEach((o) => {
+      try {
+        o.stop(now + 0.04)
+      } catch {
+        // すでに止まっている
+      }
+    })
   }
 }
 
 export interface MelodyHandle {
-  /** 再生完了で resolve */
-  done: Promise<void>
+  /** 最後まで鳴ったら true、cancel() で止めたら false で resolve */
+  done: Promise<boolean>
+  /** 予約済みの音も含めて止める */
   cancel: () => void
 }
 
@@ -56,35 +77,45 @@ export function playMelody(
   const ctx = getAudioContext()
   const start = ctx.currentTime + 0.1
   const timers: number[] = []
-  let resolveDone: () => void = () => {}
-  const done = new Promise<void>((r) => (resolveDone = r))
+  let settled = false
+  let resolveDone: (completed: boolean) => void = () => {}
+  const done = new Promise<boolean>((r) => (resolveDone = r))
+  const finish = (completed: boolean) => {
+    if (settled) return
+    settled = true
+    resolveDone(completed)
+  }
 
-  midis.forEach((m, i) => {
+  const stops = midis.map((m, i) => {
     const at = start + i * noteSec
-    playNote(m, noteSec - gapSec, at)
     timers.push(window.setTimeout(() => onNote?.(i), (at - ctx.currentTime) * 1000))
+    return playNote(m, noteSec - gapSec, at)
   })
   timers.push(
     window.setTimeout(() => {
       onNote?.(-1)
-      resolveDone()
+      finish(true)
     }, (start + midis.length * noteSec - ctx.currentTime) * 1000 + 50),
   )
 
   return {
     done,
     cancel: () => {
+      if (settled) return
       timers.forEach(clearTimeout)
-      resolveDone()
+      stops.forEach((stop) => stop())
+      onNote?.(-1)
+      finish(false)
     },
   }
 }
 
 /** 短い効果音 (クリア時など) */
-export function playChime(kind: 'success' | 'tick' = 'success') {
+export function playChime(kind: 'success' | 'tick' | 'wrong' = 'success') {
   const ctx = getAudioContext()
   const t = ctx.currentTime + 0.01
-  const notes = kind === 'success' ? [84, 88, 91] : [96]
+  // wrong は低めの2音でやさしく (責めない音に)
+  const notes = kind === 'success' ? [84, 88, 91] : kind === 'wrong' ? [67, 63] : [96]
   notes.forEach((m, i) => {
     const osc = ctx.createOscillator()
     const g = ctx.createGain()

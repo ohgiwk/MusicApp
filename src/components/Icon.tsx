@@ -1,7 +1,7 @@
 import type { ReactNode, SVGProps } from 'react'
 
 export type IconName =
-  | 'target' | 'rocket' | 'music' | 'mic' | 'back' | 'play' | 'speaker' | 'trophy' | 'wave' | 'retry' | 'check' | 'home' | 'user' | 'mute'
+  | 'target' | 'rocket' | 'music' | 'mic' | 'back' | 'play' | 'speaker' | 'trophy' | 'wave' | 'retry' | 'check' | 'home' | 'user' | 'mute' | 'ear' | 'updown' | 'distance' | 'memory'
 
 const PATHS: Record<IconName, ReactNode> = {
   target: (
@@ -53,6 +53,30 @@ const PATHS: Record<IconName, ReactNode> = {
     </>
   ),
   check: <path d="M5 12.5l4.5 4.5L19 7" />,
+  ear: (
+    <>
+      <path d="M7 9a5 5 0 0 1 10 0c0 3-2.5 4-3.5 5.5S12 18 12 19a2.5 2.5 0 0 1-4.5 1.5" />
+      <path d="M10 9a2 2 0 0 1 4 0c0 1.2-1 1.6-1.6 2.4" />
+    </>
+  ),
+  updown: <path d="M8 20V5M4 9l4-4 4 4M16 4v15M12 15l4 4 4-4" />,
+  distance: (
+    <>
+      <circle cx="5" cy="19" r="2" fill="currentColor" />
+      <circle cx="19" cy="5" r="2" fill="currentColor" />
+      <path d="M7 19h12V9M16 11.5l3-3 3 3" />
+    </>
+  ),
+  memory: (
+    <>
+      <path d="M3 16l5-6 4 4 5-8 4 5" />
+      <circle cx="3" cy="16" r="1.6" fill="currentColor" />
+      <circle cx="8" cy="10" r="1.6" fill="currentColor" />
+      <circle cx="12" cy="14" r="1.6" fill="currentColor" />
+      <circle cx="17" cy="6" r="1.6" fill="currentColor" />
+      <circle cx="21" cy="11" r="1.6" fill="currentColor" />
+    </>
+  ),
   mute: (
     <>
       <path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor" />

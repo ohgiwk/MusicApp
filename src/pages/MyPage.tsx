@@ -1,10 +1,12 @@
-import { Fragment, useMemo } from 'react'
+import { useMemo } from 'react'
 import { Link } from 'react-router'
 import { Icon } from '../components/Icon'
 import { RadarChart } from '../components/RadarChart'
 import { StatBar } from '../components/StatBar'
 import { GAMES } from '../games/meta'
-import { DIFFICULTIES, DIFFICULTY_COLORS, DIFFICULTY_LABELS } from '../games/difficulty'
+import { DISTANCE_LEVELS, DISTANCE_LEVEL_IDS, GAME_LEVELS, type LevelGameId } from '../games/difficulty'
+import { formatInterval } from '../games/ear/common'
+import { average, useEarStore } from '../store/earStore'
 import { rankingOf, useScoreStore } from '../store/scoreStore'
 import { VOICE_RANGES, useSettingsStore, type VoiceRange } from '../store/settingsStore'
 import { SoundSettings } from '../components/SoundSettings'
@@ -94,7 +96,10 @@ export function MyPage() {
         )}
       </section>
 
-      {/* 自己ベスト */}
+      {/* 耳の力 */}
+      <EarSummary />
+
+      {/* 自己ベスト (ゲーム × 難易度) */}
       <section className="card p-5">
         <div className="mb-3 flex items-center justify-between">
           <h2 className="font-extrabold">自己ベスト</h2>
@@ -102,39 +107,36 @@ export function MyPage() {
             ランキングを見る ›
           </Link>
         </div>
-        {/* ゲーム × 難易度 の自己ベスト */}
-        <div className="grid grid-cols-[minmax(0,1fr)_repeat(3,3.6rem)] items-center gap-x-1.5 gap-y-2 text-center sm:grid-cols-[minmax(0,1fr)_repeat(3,5rem)]">
-          <span />
-          {DIFFICULTIES.map((d) => (
-            <span key={d} className="whitespace-nowrap text-[10px] font-extrabold" style={{ color: DIFFICULTY_COLORS[d] }}>
-              {DIFFICULTY_LABELS[d]}
-            </span>
-          ))}
+        <div className="flex flex-col gap-2.5">
           {GAMES.map((g) => (
-            <Fragment key={g.id}>
-              <span className="flex min-w-0 items-center gap-2 text-left">
-                <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg text-white" style={{ background: g.color }}>
-                  <Icon name={g.icon} size={14} />
-                </span>
-                <span className="truncate text-xs font-bold">
-                  <span className="sm:hidden">{g.shortTitle}</span>
-                  <span className="hidden sm:inline">{g.title}</span>
-                </span>
+            <div key={g.id} className="flex items-center gap-2">
+              <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg text-white" style={{ background: g.color }}>
+                <Icon name={g.icon} size={14} />
               </span>
-              {DIFFICULTIES.map((d) => {
-                const best = g.id !== 'monitor' ? rankingOf(records[g.id], d)[0] : undefined
-                return (
-                  <Link
-                    key={d}
-                    to={`/ranking?game=${g.id}&diff=${d}`}
-                    className="rounded-xl bg-cloud py-1.5 text-lg font-extrabold tabular-nums"
-                    style={{ color: best ? g.color : '#c9c3e0' }}
-                  >
-                    {best?.score ?? '—'}
-                  </Link>
-                )
-              })}
-            </Fragment>
+              <span className="w-[4.8rem] shrink-0 truncate text-xs font-bold sm:w-32">
+                <span className="sm:hidden">{g.shortTitle}</span>
+                <span className="hidden sm:inline">{g.title}</span>
+              </span>
+              <span className="flex min-w-0 flex-1 gap-1">
+                {GAME_LEVELS[g.id as LevelGameId].map((lv) => {
+                  const best = g.id !== 'monitor' ? rankingOf(records[g.id], lv.id)[0] : undefined
+                  return (
+                    <Link
+                      key={lv.id}
+                      to={`/ranking?game=${g.id}&diff=${lv.id}`}
+                      className="min-w-0 flex-1 rounded-lg bg-cloud px-1 py-1 text-center leading-tight"
+                    >
+                      <span className="block truncate text-[9px] font-extrabold" style={{ color: lv.color }}>
+                        {lv.label}
+                      </span>
+                      <span className="block text-sm font-extrabold tabular-nums" style={{ color: best ? g.color : '#c9c3e0' }}>
+                        {best?.score ?? '—'}
+                      </span>
+                    </Link>
+                  )
+                })}
+              </span>
+            </div>
           ))}
         </div>
       </section>
@@ -187,5 +189,61 @@ function Summary({ label, value, unit }: { label: string; value: number; unit: s
         <span className="ml-0.5 text-[10px] text-ink-soft">{unit}</span>
       </p>
     </div>
+  )
+}
+
+/** 耳トレの記録 */
+function EarSummary() {
+  const minDiff = useEarStore((s) => s.minDiffCents)
+  const cleared = useEarStore((s) => s.distanceLevelCleared)
+  const distanceRecent = useEarStore((s) => s.distanceRecent)
+  const memoryMax = useEarStore((s) => s.memoryMaxNotes)
+  const memoryRecent = useEarStore((s) => s.memoryRecent)
+  const ear = GAMES.filter((g) => g.category === 'ear')
+  const distAvg = average(distanceRecent)
+  const memAvg = average(memoryRecent)
+  const items = [
+    {
+      game: ear[0],
+      label: '聞き分けられる音の差',
+      value: minDiff !== null ? formatInterval(minDiff) : '—',
+      note: minDiff === null ? 'HIGH or LOW で計測' : minDiff < 100 ? `半音の${minDiff}%の差まで聞き分けた` : '2問連続で正解できた最小の差',
+    },
+    {
+      game: ear[1],
+      label: '音程の距離感',
+      value: cleared ? `${DISTANCE_LEVELS[DISTANCE_LEVEL_IDS[cleared - 1]].label} クリア` : '—',
+      note: distAvg !== null ? `直近の正答率 ${distAvg}%` : 'PITCH DISTANCE で計測',
+    },
+    {
+      game: ear[2],
+      label: 'メロディ記憶',
+      value: memoryMax ? `${memoryMax}音` : '—',
+      note: memAvg !== null ? `直近の正答率 ${memAvg}%` : 'MELODY MEMORY で計測',
+    },
+  ]
+  return (
+    <section className="card p-5">
+      <div className="mb-3 flex items-baseline gap-2">
+        <h2 className="font-extrabold">👂 耳の力</h2>
+        <span className="text-[11px] font-bold text-ink-soft">耳トレの記録</span>
+      </div>
+      <div className="grid gap-2 sm:grid-cols-3">
+        {items.map((it) => (
+          <Link key={it.label} to={it.game.to} className="flex items-center gap-3 rounded-2xl bg-cloud p-3 sm:flex-col sm:items-start sm:gap-1">
+            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl text-white" style={{ background: it.game.color }}>
+              <Icon name={it.game.icon} size={18} />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-[11px] font-bold text-ink-soft">{it.label}</span>
+              <span className="block text-lg font-extrabold" style={{ color: it.value === '—' ? '#9a94b8' : it.game.color }}>
+                {it.value}
+              </span>
+              <span className="block text-[10px] text-ink-soft">{it.note}</span>
+            </span>
+          </Link>
+        ))}
+      </div>
+    </section>
   )
 }

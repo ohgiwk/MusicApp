@@ -1,13 +1,18 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { Difficulty } from '../games/difficulty'
 
-export type RankedGameId = 'target' | 'flight' | 'melody'
+export type RankedGameId = 'target' | 'flight' | 'melody' | 'highlow' | 'distance' | 'memory'
+
+export const RANKED_GAME_IDS: RankedGameId[] = ['target', 'flight', 'melody', 'highlow', 'distance', 'memory']
+
+const emptyRecords = (): Record<RankedGameId, ScoreRecord[]> =>
+  ({ target: [], flight: [], melody: [], highlow: [], distance: [], memory: [] })
 
 export interface ScoreRecord {
   id: string
   score: number
-  difficulty: Difficulty
+  /** 難易度 / レベルの id (easy, normal, hard, lv1 など) */
+  difficulty: string
   /** ISO 日時 */
   at: string
   /** ランキングに添える補足 (例: "4音", "12/15 ゲート") */
@@ -20,7 +25,7 @@ export interface RankResult {
   /** 自己ベスト更新 (同じ難易度で初プレイ含む) */
   isBest: boolean
   id: string
-  difficulty: Difficulty
+  difficulty: string
 }
 
 /** 各ゲーム・各難易度で保持する件数 */
@@ -31,25 +36,25 @@ interface ScoreState {
   records: Record<RankedGameId, ScoreRecord[]>
   /** 直近に記録したスコアの id (ランキング画面で強調表示する) */
   lastIds: Partial<Record<RankedGameId, string>>
-  addScore: (game: RankedGameId, difficulty: Difficulty, score: number, detail?: string) => RankResult
-  clear: (game: RankedGameId, difficulty: Difficulty) => void
+  addScore: (game: RankedGameId, difficulty: string, score: number, detail?: string) => RankResult
+  clear: (game: RankedGameId, difficulty: string) => void
 }
 
 const byScore = (a: ScoreRecord, b: ScoreRecord) => b.score - a.score || a.at.localeCompare(b.at)
 
 /** 指定した難易度のランキング (スコア順) */
-export function rankingOf(records: ScoreRecord[], difficulty: Difficulty): ScoreRecord[] {
-  return records.filter((r) => r.difficulty === difficulty).sort(byScore)
+export function rankingOf(records: ScoreRecord[] | undefined, difficulty: string): ScoreRecord[] {
+  return (records ?? []).filter((r) => r.difficulty === difficulty).sort(byScore)
 }
 
 /** 端末内 (localStorage) に保存する自己ランキング */
 export const useScoreStore = create<ScoreState>()(
   persist(
     (set, get) => ({
-      records: { target: [], flight: [], melody: [] },
+      records: emptyRecords(),
       lastIds: {},
       addScore: (game, difficulty, score, detail) => {
-        const all = get().records[game]
+        const all = get().records[game] ?? []
         const same = rankingOf(all, difficulty)
         const rec: ScoreRecord = {
           id: `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`,
@@ -79,14 +84,19 @@ export const useScoreStore = create<ScoreState>()(
         const o = (old ?? {}) as { records?: Record<RankedGameId, Omit<ScoreRecord, 'difficulty'>[]>; lastIds?: ScoreState['lastIds'] }
         const fix = (list?: Omit<ScoreRecord, 'difficulty'>[]) => (list ?? []).map((r) => ({ ...r, difficulty: 'normal' as const }))
         return {
-          records: { target: fix(o.records?.target), flight: fix(o.records?.flight), melody: fix(o.records?.melody) },
+          records: { ...emptyRecords(), target: fix(o.records?.target), flight: fix(o.records?.flight), melody: fix(o.records?.melody) },
           lastIds: o.lastIds ?? {},
         } as unknown as ScoreState
+      },
+      // 後から追加したゲームの記録欄が保存データに無くても壊れないよう、初期値に重ねる
+      merge: (persisted, current) => {
+        const p = (persisted ?? {}) as Partial<ScoreState>
+        return { ...current, ...p, records: { ...current.records, ...(p.records ?? {}) } }
       },
     },
   ),
 )
 
-export function useBestScore(game: RankedGameId, difficulty: Difficulty): number | null {
+export function useBestScore(game: RankedGameId, difficulty: string): number | null {
   return useScoreStore((s) => rankingOf(s.records[game], difficulty)[0]?.score ?? null)
 }

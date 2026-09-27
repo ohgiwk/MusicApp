@@ -2,19 +2,20 @@ import { Link } from 'react-router'
 import { BgmToggle } from '../components/BgmToggle'
 import { GameCard } from '../components/GameCard'
 import { Icon } from '../components/Icon'
-import { GAMES, MONITOR } from '../games/meta'
-import { DIFFICULTY_LABELS } from '../games/difficulty'
+import { useState } from 'react'
+import { EAR_GAMES, GAMES, MONITOR, SKILLS, VOICE_GAMES, gameMeta, scoreUnit, type GameMeta, type Skill } from '../games/meta'
+import { levelOption, type LevelGameId } from '../games/difficulty'
 import { useSettingsStore } from '../store/settingsStore'
 import { rankingOf, useScoreStore } from '../store/scoreStore'
 import { isDoneToday, useStatsStore } from '../store/statsStore'
 
-// 今日のトレーニングメニュー (日替わりで順番を変える)
-function todaysMenu() {
+// 今日のトレーニングメニュー: 聴く → 声を出す → メロディ の順 (日替わり)
+function todaysMenu(): GameMeta[] {
   const day = new Date().getDate()
-  const order = [...GAMES]
-  for (let i = 0; i < day % 3; i++) order.push(order.shift()!)
-  return order
+  return [EAR_GAMES[day % EAR_GAMES.length], VOICE_GAMES[day % 2], gameMeta('melody')]
 }
+
+type Filter = 'all' | Skill
 
 export function HomePage() {
   const todayDone = useStatsStore((s) => s.todayDone)
@@ -23,6 +24,23 @@ export function HomePage() {
   const menu = todaysMenu()
   const doneCount = menu.filter((g) => isDoneToday(todayDone, g.id)).length
   const next = menu.find((g) => !isDoneToday(todayDone, g.id))
+  const [filter, setFilter] = useState<Filter>('all')
+
+  const card = (g: GameMeta, badge?: string) => {
+    if (g.id === 'monitor') return <GameCard key={g.id} {...g} compact />
+    // 今選んでいる難易度 (レベル) での自己ベストを出す
+    const level = levelOption(g.id as LevelGameId, difficulty?.[g.id as LevelGameId])
+    const best = rankingOf(records[g.id], level.id)[0]
+    return (
+      <GameCard
+        key={g.id}
+        {...g}
+        badge={badge}
+        done={isDoneToday(todayDone, g.id)}
+        best={best ? `ベスト ${best.score}${scoreUnit(g.id)}（${level.label}）` : undefined}
+      />
+    )
+  }
 
   return (
     <div className="flex flex-col gap-5 pt-2">
@@ -71,29 +89,51 @@ export function HomePage() {
         )}
       </section>
 
-      {/* ミニゲーム */}
-      <section>
-        <h2 className="mb-3 px-1 font-extrabold">ミニゲーム</h2>
-        <div className="grid gap-3 sm:grid-cols-3">
-          {GAMES.map((g) => {
-            // 今選んでいる難易度での自己ベストを出す
-            const d = g.id !== 'monitor' ? (difficulty?.[g.id] ?? 'normal') : 'normal'
-            const best = g.id !== 'monitor' ? rankingOf(records[g.id], d)[0] : undefined
-            return (
-              <GameCard
-                key={g.id}
-                {...g}
-                done={isDoneToday(todayDone, g.id)}
-                best={best ? `ベスト ${best.score}${g.id === 'flight' ? 'pt' : '点'}（${DIFFICULTY_LABELS[d]}）` : undefined}
-              />
-            )
-          })}
+      {/* ミニゲーム (能力別に絞り込める) */}
+      <section className="flex flex-col gap-4">
+        <div className="grid grid-cols-4 gap-1.5 rounded-full bg-white/60 p-1" role="tablist" aria-label="ゲームの種類">
+          {([{ id: 'all', emoji: '', label: 'すべて' }, ...SKILLS] as { id: Filter; emoji: string; label: string }[]).map((f) => (
+            <button
+              key={f.id}
+              role="tab"
+              aria-selected={filter === f.id}
+              onClick={() => setFilter(f.id)}
+              className={`whitespace-nowrap rounded-full px-1 py-2 text-[13px] font-extrabold transition sm:text-sm ${
+                filter === f.id ? 'bg-ink text-white shadow' : 'text-ink-soft'
+              }`}
+            >
+              {f.emoji && <span className="mr-0.5">{f.emoji}</span>}
+              {f.label}
+            </button>
+          ))}
         </div>
-        <div className="mt-3">
-          <GameCard {...MONITOR} compact />
-        </div>
-      </section>
 
+        {filter === 'all' ? (
+          <>
+            <div>
+              <div className="mb-2 flex items-baseline gap-2 px-1">
+                <h2 className="font-extrabold">👂 耳トレ</h2>
+                <span className="text-xs font-bold text-ink-soft">マイク不要・聴く力を鍛える</span>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-3">{EAR_GAMES.map((g) => card(g, `STEP ${g.step}`))}</div>
+            </div>
+            <div>
+              <div className="mb-2 flex items-baseline gap-2 px-1">
+                <h2 className="font-extrabold">🎤 声トレ</h2>
+                <span className="text-xs font-bold text-ink-soft">歌って音程を合わせる</span>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-3">{VOICE_GAMES.map((g) => card(g))}</div>
+              <div className="mt-3">{card(MONITOR)}</div>
+            </div>
+          </>
+        ) : (
+          <div className="grid gap-3 sm:grid-cols-3">
+            {[...GAMES, MONITOR]
+              .filter((g) => g.skill === filter)
+              .map((g) => card(g, g.category === 'ear' ? '👂 耳トレ' : '🎤 声トレ'))}
+          </div>
+        )}
+      </section>
     </div>
   )
 }

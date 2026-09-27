@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { parseNote } from '../audio/pitchUtils'
-import type { Difficulty, DifficultyGameId } from '../games/difficulty'
+import { DEFAULT_LEVEL, type Difficulty, type DifficultyGameId, type LevelGameId } from '../games/difficulty'
 
 export type VoiceRange = 'low' | 'high'
 
@@ -14,9 +14,9 @@ interface SettingsState {
   range: VoiceRange
   /** この音量 (RMS) 未満は無音扱い */
   noiseGate: number
-  /** ゲームごとの難易度 */
-  difficulty: Record<DifficultyGameId, Difficulty>
-  setDifficulty: (game: DifficultyGameId, d: Difficulty) => void
+  /** ゲームごとの難易度 (レベル) */
+  difficulty: Partial<Record<LevelGameId, string>>
+  setDifficulty: (game: LevelGameId, level: string) => void
   /** メニュー画面の BGM */
   bgmEnabled: boolean
   /** 0〜1 */
@@ -45,8 +45,14 @@ export const useSettingsStore = create<SettingsState>()(
   ),
 )
 
-export function useDifficulty(game: DifficultyGameId) {
-  return useSettingsStore((s) => s.difficulty?.[game] ?? 'normal')
+/** 声のゲーム (かんたん/ふつう/むずかしい) の難易度 */
+export function useDifficulty(game: DifficultyGameId): Difficulty {
+  return useSettingsStore((s) => (s.difficulty?.[game] ?? 'normal') as Difficulty)
+}
+
+/** 任意のゲームのレベル id */
+export function useLevel(game: LevelGameId): string {
+  return useSettingsStore((s) => s.difficulty?.[game] ?? DEFAULT_LEVEL[game])
 }
 
 export function useVoiceRange() {

@@ -104,3 +104,87 @@ export const DIFFICULTY_DESCRIPTIONS: Record<DifficultyGameId, Record<Difficulty
   flight: { easy: FLIGHT_LEVELS.easy.desc, normal: FLIGHT_LEVELS.normal.desc, hard: FLIGHT_LEVELS.hard.desc },
   melody: { easy: MELODY_LEVELS.easy.desc, normal: MELODY_LEVELS.normal.desc, hard: MELODY_LEVELS.hard.desc },
 }
+
+// ------------------------------------------------------------------ 耳トレ (マイク不要) のゲーム
+
+export interface HighLowLevel {
+  /** 1問目の音程差 (cents) の範囲 */
+  startMin: number
+  startMax: number
+  /** 連続正解で小さくしていく下限 (cents) */
+  floor: number
+  desc: string
+}
+
+/** HIGH or LOW: 連続正解で音程差を小さくし、間違えたら大きくする */
+export const HIGHLOW_LEVELS: Record<Difficulty, HighLowLevel> = {
+  easy: { startMin: 500, startMax: 1200, floor: 100, desc: '5〜12半音の大きな差から。最小は1半音まで' },
+  normal: { startMin: 200, startMax: 500, floor: 30, desc: '2〜5半音の差から。半音より小さい差も出る' },
+  hard: { startMin: 100, startMax: 200, floor: 10, desc: '1〜2半音の差から。最小 10 cents まで挑戦' },
+}
+
+export interface MemoryLevel {
+  minNotes: number
+  maxNotes: number
+  /** 1音ごとの動き (半音) の候補。0 は同じ音 */
+  steps: number[]
+  /** 選択肢の数 */
+  choices: number
+  /** 1音の長さ (秒) */
+  noteSec: number
+  desc: string
+}
+
+export const MEMORY_LEVELS: Record<Difficulty, MemoryLevel> = {
+  easy: { minNotes: 3, maxNotes: 3, steps: [3, 4, 5, 7], choices: 3, noteSec: 0.6, desc: '3音・大きく動くメロディ・3択' },
+  normal: { minNotes: 4, maxNotes: 5, steps: [1, 2, 3, 4, 5], choices: 3, noteSec: 0.5, desc: '4〜5音・3択' },
+  hard: { minNotes: 6, maxNotes: 8, steps: [0, 1, 2, 2, 3], choices: 4, noteSec: 0.42, desc: '6〜8音・同じ音や小さな動きも・4択' },
+}
+
+export type DistanceLevelId = 'lv1' | 'lv2' | 'lv3' | 'lv4'
+
+export const DISTANCE_LEVEL_IDS: DistanceLevelId[] = ['lv1', 'lv2', 'lv3', 'lv4']
+
+/** PITCH DISTANCE: 感覚 → 数字 → 音楽理論 の順に答え方が細かくなる */
+export const DISTANCE_LEVELS: Record<DistanceLevelId, { label: string; color: string; desc: string }> = {
+  lv1: { label: 'Lv.1', color: '#22c98c', desc: '上がった？下がった？ の2択' },
+  lv2: { label: 'Lv.2', color: '#22b8e8', desc: '少し上 / 大きく上 / 少し下 / 大きく下 の4択' },
+  lv3: { label: 'Lv.3', color: '#7c5cff', desc: '何半音動いたかを数字で答える' },
+  lv4: { label: 'Lv.4', color: '#ff5fa2', desc: '半音の数と音程の名前（長3度など）で答える' },
+}
+
+// ------------------------------------------------------------------ ゲームごとのレベル一覧 (共通)
+
+export type LevelGameId = DifficultyGameId | 'highlow' | 'distance' | 'memory'
+
+export interface LevelOption {
+  id: string
+  label: string
+  color: string
+  desc: string
+}
+
+const difficultyOptions = (descs: Record<Difficulty, string>): LevelOption[] =>
+  DIFFICULTIES.map((d) => ({ id: d, label: DIFFICULTY_LABELS[d], color: DIFFICULTY_COLORS[d], desc: descs[d] }))
+
+const descsOf = (levels: Record<Difficulty, { desc: string }>) =>
+  ({ easy: levels.easy.desc, normal: levels.normal.desc, hard: levels.hard.desc })
+
+/** ゲームごとに選べるレベル (ランキングもこの単位で分ける) */
+export const GAME_LEVELS: Record<LevelGameId, LevelOption[]> = {
+  target: difficultyOptions(DIFFICULTY_DESCRIPTIONS.target),
+  flight: difficultyOptions(DIFFICULTY_DESCRIPTIONS.flight),
+  melody: difficultyOptions(DIFFICULTY_DESCRIPTIONS.melody),
+  highlow: difficultyOptions(descsOf(HIGHLOW_LEVELS)),
+  memory: difficultyOptions(descsOf(MEMORY_LEVELS)),
+  distance: DISTANCE_LEVEL_IDS.map((id) => ({ id, ...DISTANCE_LEVELS[id] })),
+}
+
+export const DEFAULT_LEVEL: Record<LevelGameId, string> = {
+  target: 'normal', flight: 'normal', melody: 'normal', highlow: 'easy', memory: 'easy', distance: 'lv1',
+}
+
+export function levelOption(game: LevelGameId, id: string | undefined): LevelOption {
+  const list = GAME_LEVELS[game]
+  return list.find((l) => l.id === id) ?? list.find((l) => l.id === DEFAULT_LEVEL[game])!
+}

@@ -13,6 +13,9 @@ const TITLES: Record<string, string> = {
   '/target': 'ピッチターゲット',
   '/flight': 'ボイスフライト',
   '/melody': 'メロディコピー',
+  '/ear/highlow': 'HIGH or LOW',
+  '/ear/distance': 'PITCH DISTANCE',
+  '/ear/memory': 'MELODY MEMORY',
   '/ranking': 'ランキング',
   '/mypage': 'マイページ',
 }
