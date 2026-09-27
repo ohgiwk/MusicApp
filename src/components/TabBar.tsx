@@ -1,11 +1,6 @@
 import { NavLink } from 'react-router'
-import { Icon, type IconName } from './Icon'
-
-export const TABS: { to: string; label: string; icon: IconName }[] = [
-  { to: '/', label: 'ホーム', icon: 'home' },
-  { to: '/ranking', label: 'ランキング', icon: 'trophy' },
-  { to: '/mypage', label: 'マイページ', icon: 'user' },
-]
+import { Icon } from './Icon'
+import { TABS } from './tabs'
 
 /** 画面下部のタブ切り替え */
 export function TabBar() {

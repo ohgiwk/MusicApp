@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useEffectEvent, useRef, useState, type ReactNode } from 'react'
 import { noteFromMidi } from '../audio/pitchUtils'
 import { Icon } from '../components/Icon'
 import { MicPermissionGate } from '../components/MicPermissionGate'
@@ -50,7 +50,10 @@ function VoiceFlightGame() {
   const countdownId = useRef(0)
   // setState 反映前に次フレームが来ても二重に遷移しないよう、ループ内では ref で判定する
   const phaseRef = useRef<Phase>('intro')
-  phaseRef.current = phase
+  const setGamePhase = (p: Phase) => {
+    phaseRef.current = p
+    setPhase(p)
+  }
 
   // ボイスフライトは操作感重視: 平滑化は軽めにして、キャラ側の追従で滑らかにする
   const { frameRef } = usePitchDetection({
@@ -59,7 +62,7 @@ function VoiceFlightGame() {
     smoothing: { timeConstantMs: 25, medianSize: 3 },
   })
 
-  const newEngine = (c: number) => {
+  const createEngine = (c: number) => {
     const e = new VoiceFlightEngine({
       lowMidi: c - HALF_WINDOW,
       highMidi: c + HALF_WINDOW,
@@ -69,8 +72,30 @@ function VoiceFlightGame() {
     const el = containerRef.current
     if (el) e.resize(el.clientWidth, el.clientHeight)
     engineRef.current = e
-    setHud({ ...e.stats })
+    return e
   }
+
+  /** エンジンを作り直して HUD もリセットする */
+  const newEngine = (c: number) => setHud({ ...createEngine(c).stats })
+
+  const startCountdown = () => {
+    setGamePhase('countdown')
+    setCount(3)
+    let n = 3
+    window.clearInterval(countdownId.current)
+    countdownId.current = window.setInterval(() => {
+      n--
+      if (n <= 0) {
+        window.clearInterval(countdownId.current)
+        setGamePhase('play')
+      } else setCount(n)
+    }, 700)
+  }
+
+  // 初回表示用のエンジン (HUD は初期表示のままでよいので state は更新しない)
+  const initEngine = useEffectEvent(() => {
+    createEngine(center)
+  })
 
   // Canvas を親要素サイズ + devicePixelRatio に追従させる
   useEffect(() => {
@@ -89,7 +114,7 @@ function VoiceFlightGame() {
   }, [])
 
   useEffect(() => {
-    newEngine(center)
+    initEngine()
     return () => window.clearInterval(countdownId.current)
   }, [])
 
@@ -123,32 +148,16 @@ function VoiceFlightGame() {
         const total = s.hits + s.misses
         recordPlay('flight', fromVoiceFlight(s))
         setRank(addScore('flight', difficulty, s.score, `${s.hits}/${total} ゲート・最大${s.maxCombo}コンボ`))
-        phaseRef.current = 'result'
-        setPhase('result')
+        setGamePhase('result')
       }
     }
     e.draw(ctx, f.midi)
   })
 
-  const startCountdown = () => {
-    phaseRef.current = 'countdown'
-    setPhase('countdown')
-    setCount(3)
-    let n = 3
-    window.clearInterval(countdownId.current)
-    countdownId.current = window.setInterval(() => {
-      n--
-      if (n <= 0) {
-        window.clearInterval(countdownId.current)
-        setPhase('play')
-      } else setCount(n)
-    }, 700)
-  }
-
   const startCalibration = () => {
     calibSamples.current = []
     setCalib(0)
-    setPhase('calibrate')
+    setGamePhase('calibrate')
   }
 
   const retry = () => {
@@ -250,7 +259,7 @@ function VoiceFlightGame() {
           onRetry={retry}
           onChangeDifficulty={() => {
             newEngine(center)
-            setPhase('intro')
+            setGamePhase('intro')
           }}
           badge={<RankBadge result={rank} game="flight" />}
         >

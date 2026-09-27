@@ -45,6 +45,16 @@ export function PitchTargetPage() {
   )
 }
 
+interface TargetView {
+  cents: number | null
+  hold: number
+  trail: (number | null)[]
+  /** お手本の再生が終わり、判定中か */
+  listening: boolean
+}
+
+const EMPTY_VIEW: TargetView = { cents: null, hold: 0, trail: [], listening: false }
+
 function PitchTargetGame() {
   const range = useVoiceRange()
   const difficulty = useDifficulty('target')
@@ -59,6 +69,9 @@ function PitchTargetGame() {
   const [target, setTarget] = useState(() => pickTarget(range.min, range.max, level))
   const [results, setResults] = useState<RoundResult[]>([])
   const [lastGrade, setLastGrade] = useState<Grade | null>(null)
+
+  /** 画面表示用のスナップショット (毎フレーム onFrame から更新。レンダー中に ref を読まないため) */
+  const [view, setView] = useState<TargetView>(EMPTY_VIEW)
 
   // 毎フレーム更新するゲーム状態は ref で持つ
   const g = useRef({
@@ -89,6 +102,7 @@ function PitchTargetGame() {
     })
     setTarget(t)
     setLastGrade(null)
+    setView(EMPTY_VIEW)
     setPhase('play')
     playNote(t, TONE_SEC)
     g.current.listenAfter = performance.now() + TONE_SEC * 1000 + 250
@@ -136,7 +150,11 @@ function PitchTargetGame() {
       if (s.trail.length > TRAIL_LEN) s.trail.pop()
       const dt = s.lastTime ? Math.min(50, now - s.lastTime) : 16
       s.lastTime = now
-      if (phase !== 'play' || s.done || now < s.listenAfter) return
+      const publish = () => setView({ cents, hold: s.hold, trail: s.trail.slice(), listening: now >= s.listenAfter })
+      if (phase !== 'play' || s.done || now < s.listenAfter) {
+        publish()
+        return
+      }
 
       if (cents !== null && Math.abs(cents) <= HIT_RANGE) {
         s.hold = Math.min(1, s.hold + dt / HOLD_MS)
@@ -146,6 +164,7 @@ function PitchTargetGame() {
         s.hold = Math.max(0, s.hold - dt / (HOLD_MS * (cents === null ? 3 : 1.5)))
       }
 
+      publish()
       if (s.hold >= 1) {
         s.done = true
         const st = summarize(s.inZoneSamples.slice(-90))
@@ -210,11 +229,10 @@ function PitchTargetGame() {
     )
   }
 
-  const s = g.current
-  const cents = s.cents
+  const s = view
+  const { cents, listening } = view
   const inZone = cents !== null && Math.abs(cents) <= HIT_RANGE
   const out = cents !== null && Math.abs(cents) > VIEW_RANGE_CENTS
-  const listening = performance.now() >= s.listenAfter
   const hint = !listening
     ? 'お手本を聞いてね…'
     : cents === null

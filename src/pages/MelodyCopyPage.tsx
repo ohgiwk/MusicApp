@@ -42,7 +42,10 @@ function MelodyCopyGame() {
   const [countIn, setCountIn] = useState(0)
   const [result, setResult] = useState<MelodyScore | null>(null)
 
+  /** 採点用の歌声の記録 (毎フレーム追加) */
   const samples = useRef<PitchSample[]>([])
+  /** 画面表示用: 歌声の軌跡と、歌唱開始からの経過時間 (カーソル位置) */
+  const [trace, setTrace] = useState<{ samples: PitchSample[]; t: number | null }>({ samples: [], t: null })
   const singStart = useRef(0)
   const finished = useRef(false)
   const playback = useRef<MelodyHandle | null>(null)
@@ -85,6 +88,7 @@ function MelodyCopyGame() {
     clearTimers()
     setResult(null)
     samples.current = []
+    setTrace({ samples: [], t: null })
     finished.current = false
     setPhase('countin')
     // メロディと同じテンポでカウントイン → 最初の音だけヒントで鳴らす
@@ -108,6 +112,7 @@ function MelodyCopyGame() {
   const finish = useCallback(() => {
     const r = scoreMelody(melody, samples.current, NOTE_MS, cfg)
     setResult(r)
+    setTrace((prev) => ({ ...prev, t: null }))
     setPhase('result')
     setActiveNote(-1)
     if (r.score >= 70) playChime('success')
@@ -120,6 +125,7 @@ function MelodyCopyGame() {
       if (phase !== 'singing' || finished.current) return
       const t = f.time - singStart.current
       samples.current.push({ t, midi: f.midi })
+      setTrace({ samples: samples.current.slice(), t })
       const idx = Math.floor(t / NOTE_MS)
       if (idx !== activeNote && idx < melody.length) setActiveNote(idx)
       if (t > melody.length * NOTE_MS + NOTE_MS * 0.3) {
@@ -139,9 +145,6 @@ function MelodyCopyGame() {
     setResult(null)
     setPhase('ready')
   }
-
-  const now = performance.now()
-  const cursorT = phase === 'singing' ? now - singStart.current : null
 
   return (
     <div className="flex flex-col gap-3">
@@ -164,8 +167,8 @@ function MelodyCopyGame() {
         melody={melody}
         activeNote={activeNote}
         showTargets={phase !== 'ready'}
-        samples={phase === 'singing' || phase === 'result' ? samples.current : []}
-        cursorT={cursorT}
+        samples={phase === 'singing' || phase === 'result' ? trace.samples : []}
+        cursorT={phase === 'singing' ? trace.t : null}
         liveMidi={phase === 'waiting' || phase === 'countin' || phase === 'singing' ? frame.midi : null}
         result={result}
         countIn={phase === 'countin' ? countIn : 0}

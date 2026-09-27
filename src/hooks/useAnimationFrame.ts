@@ -1,9 +1,8 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useEffectEvent } from 'react'
 
-/** 毎フレーム callback(dtMs, nowMs) を呼ぶ。callback は最新のものが使われる */
+/** 毎フレーム callback(dtMs, nowMs) を呼ぶ。callback は常に最新のものが使われる */
 export function useAnimationFrame(callback: (dt: number, now: number) => void, active = true) {
-  const cbRef = useRef(callback)
-  cbRef.current = callback
+  const onTick = useEffectEvent(callback)
 
   useEffect(() => {
     if (!active) return
@@ -12,7 +11,7 @@ export function useAnimationFrame(callback: (dt: number, now: number) => void, a
     const loop = (now: number) => {
       const dt = Math.min(50, now - last)
       last = now
-      cbRef.current(dt, now)
+      onTick(dt, now)
       id = requestAnimationFrame(loop)
     }
     id = requestAnimationFrame(loop)

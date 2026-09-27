@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useEffectEvent, useRef, useState } from 'react'
 import { getAnalyser } from '../audio/audioEngine'
 import { createPitchDetector, type PitchDetector } from '../audio/pitchDetector'
 import { PitchSmoother, type SmootherOptions } from '../audio/pitchSmoother'
@@ -51,10 +51,9 @@ export function usePitchDetection({ enabled = true, reactive = true, onFrame, sm
   const noiseGate = useSettingsStore((s) => s.noiseGate)
   const [frame, setFrame] = useState<PitchFrame>(EMPTY)
   const frameRef = useRef<PitchFrame>(EMPTY)
-  const onFrameRef = useRef(onFrame)
-  onFrameRef.current = onFrame
-  const gateRef = useRef(noiseGate)
-  gateRef.current = noiseGate
+  // 毎フレームの処理から最新の props / 設定を読む (解析ループを作り直さずに済む)
+  const emitFrame = useEffectEvent((f: PitchFrame) => onFrame?.(f))
+  const currentGate = useEffectEvent(() => noiseGate)
   const smoothingRef = useRef(smoothing)
 
   useEffect(() => {
@@ -73,7 +72,7 @@ export function usePitchDetection({ enabled = true, reactive = true, onFrame, sm
     const tick = () => {
       analyser.getFloatTimeDomainData(buf)
       const now = performance.now()
-      const est = detector.detect(buf, gateRef.current)
+      const est = detector.detect(buf, currentGate())
       const ok = est.freq !== null && est.clarity >= MIN_CLARITY
       const rawMidi = ok ? freqToMidi(est.freq!) : null
       const midi = smoother.push(rawMidi, now)
@@ -89,7 +88,7 @@ export function usePitchDetection({ enabled = true, reactive = true, onFrame, sm
         rms: est.rms,
       }
       frameRef.current = f
-      onFrameRef.current?.(f)
+      emitFrame(f)
       if (reactive) setFrame(f)
       id = requestAnimationFrame(tick)
     }
