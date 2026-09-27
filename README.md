@@ -30,6 +30,7 @@ npm run dev
 | `npm run dev`                     | 開発サーバー (http://localhost:5173) |
 | `npm run build`                   | 型チェック + 本番ビルド (`dist/`)    |
 | `npm run typecheck`               | 型チェックだけ                       |
+| `npm test` / `test:watch`         | テスト（Vitest）                     |
 | `npm run lint` / `lint:fix`       | ESLint（React Hooks のルール込み）   |
 | `npm run format` / `format:check` | Prettier                             |
 
@@ -42,7 +43,7 @@ npm run dev
 
 ## 公開（GitHub Pages）
 
-`main` に push すると GitHub Actions（[.github/workflows/deploy.yml](.github/workflows/deploy.yml)）が lint → フォーマットチェック → ビルドを行い、GitHub Pages に公開します。lint かフォーマットチェックが失敗すると公開されません。
+`main` に push すると GitHub Actions（[.github/workflows/deploy.yml](.github/workflows/deploy.yml)）が lint → フォーマットチェック → テスト → ビルドを行い、GitHub Pages に公開します。どれかが失敗すると公開されません。
 
 - サブパス `/MusicApp/` で配信するため、本番ビルドだけ `base` を `/MusicApp/` にしています（[vite.config.ts](vite.config.ts)）
 - ゲーム画面の URL を直接開けるよう、`index.html` を `404.html` としてもコピーしています（応答コードは 404 ですが、表示は正常です）
@@ -80,17 +81,29 @@ public/         アイコン・manifest
 
 ## ゲームを追加するときに触る場所
 
-現状、次の場所をそれぞれ書き換える必要があります（1 か所にまとめるのは今後の課題です）。
+1. [src/games/meta.ts](src/games/meta.ts): `GAME_IDS` に ID を足し、`EAR_GAMES` か `VOICE_GAMES` に情報（名前・パス・色・アイコン・分類）を足す
+2. [src/pages/gamePages.ts](src/pages/gamePages.ts): `GAME_PAGES` に画面を足す
+3. [src/games/difficulty.ts](src/games/difficulty.ts): `GAME_LEVELS` と `DEFAULT_LEVEL` にレベルを足す
 
-1. [src/games/meta.ts](src/games/meta.ts): `EAR_GAMES` か `VOICE_GAMES` に追加（名前・色・アイコン・分類）
-2. [src/router.tsx](src/router.tsx): 画面のルート
-3. [src/components/Layout.tsx](src/components/Layout.tsx): `TITLES`（ヘッダーのタイトル）
-4. [src/games/difficulty.ts](src/games/difficulty.ts): `LevelGameId`・`GAME_LEVELS`・`DEFAULT_LEVEL`
-5. [src/store/scoreStore.ts](src/store/scoreStore.ts): `RankedGameId`・`RANKED_GAME_IDS`・`emptyRecords`
+2 と 3 は `Record<GameId, ...>` なので、足し忘れると型エラーになります。ルート・ヘッダーのタイトル・ランキングの欄は 1 から自動で作られます（[src/games/meta.test.ts](src/games/meta.test.ts) で整合性も確認しています）。
+
+## テスト
+
+`src/**/*.test.ts`（Vitest）。React に依存しないロジックを中心にテストしています。
+
+- 音程の推定・平滑化・音名の計算（`src/audio/`）
+- 各ゲームの出題・判定・採点（`src/games/`）
+- ランキング・能力値・連続日数の計算と、保存データの移行（`src/store/`）
+- 耳トレの再生の中止（`useQuestionPlayback`、jsdom）・マイクの状態（`micStore`）
+- `theme.ts` と `index.css` の色が一致していること
+
+ゲームの進行ロジックは画面から分けて置いています（例: ボイスフライトの [engine.ts](src/games/voiceFlight/engine.ts)、ピッチターゲットの [round.ts](src/games/pitchTarget/round.ts)、メロディコピーの [recorder.ts](src/games/melodyCopy/recorder.ts)）。新しいロジックもこの形にするとテストしやすくなります。
 
 ## 実装のきまり
 
 - **問題の音が鳴っている間は BGM も効果音も鳴らさない。** BGM はタブ画面（ホーム・ランキング・マイページ）でだけ流れ、ゲーム画面では止まります（マイクが拾って判定が狂うため）
 - **再生の中止**: `playMelody` の `cancel()` は予約済みの音も止め、`done` は最後まで鳴ったら `true`、中止なら `false` で resolve します。`done` を待って画面を進めるときは `true` のときだけ進めてください
-- **画面を離れるときの後片付け**: `setTimeout` で予約した処理や鳴っている音は、アンマウント時に止めてください
-- **レンダー中に ref や `performance.now()` を読まない**（ESLint の react-hooks ルールが検出します）。毎フレーム変わる値は state のスナップショットとして渡します（例: [src/pages/PitchTargetPage.tsx](src/pages/PitchTargetPage.tsx) の `view`）
+- **画面を離れるときの後片付け**: `setTimeout` で予約した処理や鳴っている音は、アンマウント時に止めてください（耳トレは `useQuestionPlayback` が自動で行います）
+- **マイクは声トレとピッチモニターでだけ使う**: それ以外の画面では自動で止めます（[Layout.tsx](src/components/Layout.tsx) の `useMicLifecycle`）。一度許可されていれば、次に声トレを開いたときは説明を出さずに再開します
+- **色**: SVG・Canvas・インラインスタイルの色は [src/theme.ts](src/theme.ts) の `COLORS` を使ってください（`index.css` の `@theme` と同じ値）
+- **レンダー中に ref や `performance.now()` を読まない**（ESLint の react-hooks ルールが検出します）。毎フレーム変わる値は state のスナップショットとして渡します（例: ピッチターゲットの `TargetRound.view()`）
