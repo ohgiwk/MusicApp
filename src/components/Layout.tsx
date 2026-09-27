@@ -7,6 +7,7 @@ const TITLES: Record<string, string> = {
   '/target': 'ピッチターゲット',
   '/flight': 'ボイスフライト',
   '/melody': 'メロディコピー',
+  '/ranking': 'ランキング',
 }
 
 export function Layout() {

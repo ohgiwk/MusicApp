@@ -2,7 +2,8 @@ import { Link } from 'react-router'
 import { GameCard } from '../components/GameCard'
 import { Icon } from '../components/Icon'
 import { StatBar } from '../components/StatBar'
-import { GAMES, MONITOR } from '../games/meta'
+import { GAMES, MONITOR, RANKING } from '../games/meta'
+import { useScoreStore } from '../store/scoreStore'
 import { VOICE_RANGES, useSettingsStore, type VoiceRange } from '../store/settingsStore'
 import { APP_VERSION, formatVersion } from '../update/versionCheck'
 import { STAT_LABELS, isDoneToday, useStatsStore, type StatKey } from '../store/statsStore'
@@ -25,6 +26,7 @@ function todaysMenu() {
 export function HomePage() {
   const stats = useStatsStore((s) => s.stats)
   const todayDone = useStatsStore((s) => s.todayDone)
+  const records = useScoreStore((s) => s.records)
   const range = useSettingsStore((s) => s.range)
   const setRange = useSettingsStore((s) => s.setRange)
   const menu = todaysMenu()
@@ -82,10 +84,16 @@ export function HomePage() {
         <h2 className="mb-3 px-1 font-extrabold">ミニゲーム</h2>
         <div className="grid gap-3 sm:grid-cols-3">
           {GAMES.map((g) => (
-            <GameCard key={g.id} {...g} done={isDoneToday(todayDone, g.id)} />
+            <GameCard
+              key={g.id}
+              {...g}
+              done={isDoneToday(todayDone, g.id)}
+              best={g.id !== 'monitor' && records[g.id][0] ? `ベスト ${records[g.id][0].score}${g.id === 'flight' ? 'pt' : '点'}` : undefined}
+            />
           ))}
         </div>
-        <div className="mt-3">
+        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+          <GameCard {...RANKING} compact />
           <GameCard {...MONITOR} compact />
         </div>
       </section>

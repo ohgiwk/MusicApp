@@ -3,9 +3,11 @@ import { noteFromMidi } from '../audio/pitchUtils'
 import { playChime, playMelody, playNote, type MelodyHandle } from '../audio/tonePlayer'
 import { Icon } from '../components/Icon'
 import { MicPermissionGate } from '../components/MicPermissionGate'
+import { RankBadge } from '../components/RankBadge'
 import { OK_CENTS, generateMelody, scoreMelody, type MelodyScore, type PitchSample } from '../games/melodyCopy/scoring'
 import { usePitchDetection, type PitchFrame } from '../hooks/usePitchDetection'
 import { useVoiceRange } from '../store/settingsStore'
+import { useScoreStore, type RankResult } from '../store/scoreStore'
 import { useStatsStore } from '../store/statsStore'
 
 const NOTE_MS = 800
@@ -24,6 +26,8 @@ export function MelodyCopyPage() {
 function MelodyCopyGame() {
   const range = useVoiceRange()
   const record = useStatsStore((s) => s.record)
+  const addScore = useScoreStore((s) => s.addScore)
+  const [rank, setRank] = useState<RankResult | null>(null)
   const [level, setLevel] = useState(3)
   const [melody, setMelody] = useState(() => generateMelody(3, range.min, range.max))
   const [phase, setPhase] = useState<Phase>('ready')
@@ -85,7 +89,8 @@ function MelodyCopyGame() {
     setActiveNote(-1)
     if (r.score >= 70) playChime('success')
     record({ melody: r.score, accuracy: r.avgAbsCents === null ? 0 : Math.round(Math.max(0, 100 - r.avgAbsCents)) }, 'melody')
-  }, [melody, record])
+    setRank(addScore('melody', r.score, `レベル${melody.length - 2}（${melody.length}音）・${r.correct}/${melody.length} 正解`))
+  }, [melody, record, addScore])
 
   const onFrame = useCallback(
     (f: PitchFrame) => {
@@ -161,6 +166,7 @@ function MelodyCopyGame() {
             onListen={() => void listen()}
             onNext={() => nextMelody(result.score >= 70 ? Math.min(5, level + 1) : level)}
             levelUp={result.score >= 70 && level < 5}
+            rank={rank}
           />
         )
       )}
@@ -286,8 +292,15 @@ function MelodyGraph({ melody, activeNote, showTargets, samples, cursorT, liveMi
 }
 
 function ResultPanel({
-  result, onRetry, onListen, onNext, levelUp,
-}: { result: MelodyScore; onRetry: () => void; onListen: () => void; onNext: () => void; levelUp: boolean }) {
+  result, onRetry, onListen, onNext, levelUp, rank,
+}: {
+  result: MelodyScore
+  onRetry: () => void
+  onListen: () => void
+  onNext: () => void
+  levelUp: boolean
+  rank: RankResult | null
+}) {
   const title = result.score >= 90 ? 'PERFECT!' : result.score >= 70 ? 'GREAT!' : result.score >= 40 ? 'GOOD!' : 'おしい！'
   return (
     <div className="card animate-pop flex flex-col gap-4 p-5">
@@ -295,15 +308,18 @@ function ResultPanel({
         <div>
           <p className="text-shine text-3xl font-extrabold">{title}</p>
           <p className="text-sm text-ink-soft">
-            {result.correct} / {result.notes.length} 音正解
-            {result.avgAbsCents !== null && ` ・ 平均誤差 ${Math.round(result.avgAbsCents)} cents`}
+            <span className="whitespace-nowrap">{result.correct} / {result.notes.length} 音正解</span>
+            {result.avgAbsCents !== null && (
+              <span className="block whitespace-nowrap sm:ml-2 sm:inline">平均誤差 {Math.round(result.avgAbsCents)} cents</span>
+            )}
           </p>
         </div>
-        <p className="text-5xl font-extrabold text-grape">
+        <p className="shrink-0 whitespace-nowrap text-5xl font-extrabold text-grape">
           {result.score}
           <span className="text-base text-ink-soft">点</span>
         </p>
       </div>
+      <RankBadge result={rank} game="melody" />
       <div className="flex flex-wrap gap-2">
         {result.notes.map((n, i) => (
           <div

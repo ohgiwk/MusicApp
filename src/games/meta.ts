@@ -15,6 +15,10 @@ export const GAMES: GameMeta[] = [
   { id: 'melody', to: '/melody', icon: 'music', title: 'メロディコピー', description: '聞いたメロディを歌い返そう', color: '#ffb020' },
 ]
 
+export const RANKING = {
+  to: '/ranking', icon: 'trophy' as IconName, title: 'ランキング', description: 'ゲームごとの自己ベスト', color: '#f59e0b',
+}
+
 export const MONITOR: GameMeta = {
   id: 'monitor', to: '/monitor', icon: 'wave', title: 'ピッチモニター', description: 'マイクと声の高さをチェック', color: '#7c5cff',
 }

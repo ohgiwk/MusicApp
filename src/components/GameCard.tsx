@@ -8,10 +8,12 @@ interface Props {
   description: string
   color: string
   done?: boolean
+  /** 自己ベスト表示 (例: "ベスト 85点") */
+  best?: string
   compact?: boolean
 }
 
-export function GameCard({ to, icon, title, description, color, done, compact }: Props) {
+export function GameCard({ to, icon, title, description, color, done, best, compact }: Props) {
   return (
     <Link
       to={to}
@@ -37,6 +39,11 @@ export function GameCard({ to, icon, title, description, color, done, compact }:
           )}
         </span>
         <span className="block text-sm text-ink-soft">{description}</span>
+        {best && (
+          <span className="mt-1 inline-flex items-center gap-1 text-xs font-extrabold" style={{ color }}>
+            <Icon name="trophy" size={12} /> {best}
+          </span>
+        )}
       </span>
       <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-full bg-cloud text-grape ${compact ? '' : 'sm:hidden'}`}>
         <Icon name="play" size={16} />

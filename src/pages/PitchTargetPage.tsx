@@ -3,12 +3,14 @@ import { centsBetween, foldOctave, midiToFreq, noteFromMidi } from '../audio/pit
 import { playChime, playNote } from '../audio/tonePlayer'
 import { Icon } from '../components/Icon'
 import { MicPermissionGate } from '../components/MicPermissionGate'
+import { RankBadge } from '../components/RankBadge'
 import { ResultModal } from '../components/ResultModal'
 import {
   GRADE_STYLE, HIT_RANGE, HOLD_MS, VIEW_RANGE_CENTS, centsToView, gradeOf, pickTarget, summarize, type Grade,
 } from '../games/pitchTarget/grading'
 import { usePitchDetection, type PitchFrame } from '../hooks/usePitchDetection'
 import { useVoiceRange } from '../store/settingsStore'
+import { useScoreStore, type RankResult } from '../store/scoreStore'
 import { useStatsStore } from '../store/statsStore'
 
 const ROUNDS = 5
@@ -35,6 +37,8 @@ export function PitchTargetPage() {
 function PitchTargetGame() {
   const range = useVoiceRange()
   const record = useStatsStore((s) => s.record)
+  const addScore = useScoreStore((s) => s.addScore)
+  const [rank, setRank] = useState<RankResult | null>(null)
   const [phase, setPhase] = useState<Phase>('intro')
   const [round, setRound] = useState(0)
   const [target, setTarget] = useState(() => pickTarget(range.min, range.max))
@@ -77,6 +81,8 @@ function PitchTargetGame() {
         const pts = all.reduce((a, r) => a + (r.grade === 'SKIP' ? 0 : GRADE_STYLE[r.grade].points), 0) / ROUNDS
         const stab = graded.length ? graded.reduce((a, r) => a + r.stdDev, 0) / graded.length : 25
         record({ accuracy: Math.round(pts), stability: Math.round(Math.max(0, 100 - stab * 4)) }, 'target')
+        const perfects = all.filter((r) => r.grade === 'PERFECT').length
+        setRank(addScore('target', Math.round(pts), `${range.label}・PERFECT ×${perfects}`))
         window.setTimeout(() => setPhase('result'), res.grade === 'SKIP' ? 0 : 1100)
       } else {
         window.setTimeout(() => {
@@ -85,7 +91,7 @@ function PitchTargetGame() {
         }, res.grade === 'SKIP' ? 0 : 1100)
       }
     },
-    [results, record, startRound, range.min, range.max],
+    [results, record, addScore, startRound, range.min, range.max, range.label],
   )
 
   const onFrame = useCallback(
@@ -124,6 +130,7 @@ function PitchTargetGame() {
   const { frame } = usePitchDetection({ onFrame, enabled: phase !== 'result' })
 
   const restart = () => {
+    setRank(null)
     setResults([])
     setRound(0)
     startRound(pickTarget(range.min, range.max))
@@ -289,7 +296,7 @@ function PitchTargetGame() {
       </div>
 
       {phase === 'result' && (
-        <ResultModal title={totalScore >= 90 ? 'PERFECT!' : totalScore >= 70 ? 'GREAT!' : 'GOOD!'} score={totalScore} onRetry={restart}>
+        <ResultModal title={totalScore >= 90 ? 'PERFECT!' : totalScore >= 70 ? 'GREAT!' : 'GOOD!'} score={totalScore} onRetry={restart} badge={<RankBadge result={rank} game="target" />}>
           <ul className="flex flex-col gap-1.5">
             {results.map((r, i) => (
               <li key={i} className="flex items-center justify-between rounded-xl bg-cloud px-3 py-1.5 text-sm">

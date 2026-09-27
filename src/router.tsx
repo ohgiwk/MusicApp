@@ -4,6 +4,7 @@ import { HomePage } from './pages/HomePage'
 import { MelodyCopyPage } from './pages/MelodyCopyPage'
 import { PitchMonitorPage } from './pages/PitchMonitorPage'
 import { PitchTargetPage } from './pages/PitchTargetPage'
+import { RankingPage } from './pages/RankingPage'
 import { VoiceFlightPage } from './pages/VoiceFlightPage'
 
 export const router = createBrowserRouter([
@@ -16,6 +17,7 @@ export const router = createBrowserRouter([
       { path: 'target', element: <PitchTargetPage /> },
       { path: 'flight', element: <VoiceFlightPage /> },
       { path: 'melody', element: <MelodyCopyPage /> },
+      { path: 'ranking', element: <RankingPage /> },
       { path: '*', element: <HomePage /> },
     ],
   },

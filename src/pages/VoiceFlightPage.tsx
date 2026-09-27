@@ -2,11 +2,13 @@ import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { noteFromMidi } from '../audio/pitchUtils'
 import { Icon } from '../components/Icon'
 import { MicPermissionGate } from '../components/MicPermissionGate'
+import { RankBadge } from '../components/RankBadge'
 import { ResultModal } from '../components/ResultModal'
 import { VoiceFlightEngine, type FlightStats } from '../games/voiceFlight/engine'
 import { useAnimationFrame } from '../hooks/useAnimationFrame'
 import { usePitchDetection } from '../hooks/usePitchDetection'
 import { useVoiceRange } from '../store/settingsStore'
+import { useScoreStore, type RankResult } from '../store/scoreStore'
 import { useStatsStore } from '../store/statsStore'
 
 const DURATION_MS = 60_000
@@ -27,6 +29,8 @@ export function VoiceFlightPage() {
 function VoiceFlightGame() {
   const range = useVoiceRange()
   const record = useStatsStore((s) => s.record)
+  const addScore = useScoreStore((s) => s.addScore)
+  const [rank, setRank] = useState<RankResult | null>(null)
   const [phase, setPhase] = useState<Phase>('intro')
   const [center, setCenter] = useState(() => Math.round((range.min + range.max) / 2))
   const [calib, setCalib] = useState(0)
@@ -115,6 +119,7 @@ function VoiceFlightGame() {
           },
           'flight',
         )
+        setRank(addScore('flight', s.score, `${s.hits}/${total} ゲート・最大${s.maxCombo}コンボ`))
         phaseRef.current = 'result'
         setPhase('result')
       }
@@ -233,6 +238,7 @@ function VoiceFlightGame() {
           subtitle={`${s.hits} / ${total} ゲート通過`}
           score={s.score}
           onRetry={retry}
+          badge={<RankBadge result={rank} game="flight" />}
         >
           <div className="grid grid-cols-3 gap-2 text-center">
             <Mini label="PERFECT" value={s.perfects} />
