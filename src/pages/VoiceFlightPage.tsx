@@ -8,6 +8,7 @@ import { VoiceFlightEngine, type FlightStats } from '../games/voiceFlight/engine
 import { useAnimationFrame } from '../hooks/useAnimationFrame'
 import { usePitchDetection } from '../hooks/usePitchDetection'
 import { useVoiceRange } from '../store/settingsStore'
+import { fromVoiceFlight } from '../games/abilityScoring'
 import { useScoreStore, type RankResult } from '../store/scoreStore'
 import { useStatsStore } from '../store/statsStore'
 
@@ -28,7 +29,7 @@ export function VoiceFlightPage() {
 
 function VoiceFlightGame() {
   const range = useVoiceRange()
-  const record = useStatsStore((s) => s.record)
+  const recordPlay = useStatsStore((s) => s.recordPlay)
   const addScore = useScoreStore((s) => s.addScore)
   const [rank, setRank] = useState<RankResult | null>(null)
   const [phase, setPhase] = useState<Phase>('intro')
@@ -111,14 +112,7 @@ function VoiceFlightGame() {
       if (e.stats.finished) {
         const s = e.stats
         const total = s.hits + s.misses
-        const hitRate = total ? s.hits / total : 0
-        record(
-          {
-            control: Math.round(hitRate * 100),
-            stability: Math.round(total ? (s.perfects / total) * 100 : 0),
-          },
-          'flight',
-        )
+        recordPlay('flight', fromVoiceFlight(s))
         setRank(addScore('flight', s.score, `${s.hits}/${total} ゲート・最大${s.maxCombo}コンボ`))
         phaseRef.current = 'result'
         setPhase('result')

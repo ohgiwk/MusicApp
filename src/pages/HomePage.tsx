@@ -1,19 +1,9 @@
 import { Link } from 'react-router'
 import { GameCard } from '../components/GameCard'
 import { Icon } from '../components/Icon'
-import { StatBar } from '../components/StatBar'
-import { GAMES, MONITOR, RANKING } from '../games/meta'
+import { GAMES, MONITOR } from '../games/meta'
 import { useScoreStore } from '../store/scoreStore'
-import { VOICE_RANGES, useSettingsStore, type VoiceRange } from '../store/settingsStore'
-import { APP_VERSION, formatVersion } from '../update/versionCheck'
-import { STAT_LABELS, isDoneToday, useStatsStore, type StatKey } from '../store/statsStore'
-
-const STAT_COLORS: Record<StatKey, string> = {
-  accuracy: '#ff5fa2',
-  stability: '#22c98c',
-  control: '#22b8e8',
-  melody: '#ffb020',
-}
+import { isDoneToday, useStatsStore } from '../store/statsStore'
 
 // 今日のトレーニングメニュー (日替わりで順番を変える)
 function todaysMenu() {
@@ -24,11 +14,8 @@ function todaysMenu() {
 }
 
 export function HomePage() {
-  const stats = useStatsStore((s) => s.stats)
   const todayDone = useStatsStore((s) => s.todayDone)
   const records = useScoreStore((s) => s.records)
-  const range = useSettingsStore((s) => s.range)
-  const setRange = useSettingsStore((s) => s.setRange)
   const menu = todaysMenu()
   const doneCount = menu.filter((g) => isDoneToday(todayDone, g.id)).length
   const next = menu.find((g) => !isDoneToday(todayDone, g.id))
@@ -92,40 +79,11 @@ export function HomePage() {
             />
           ))}
         </div>
-        <div className="mt-3 grid gap-3 sm:grid-cols-2">
-          <GameCard {...RANKING} compact />
+        <div className="mt-3">
           <GameCard {...MONITOR} compact />
         </div>
       </section>
 
-      {/* 能力値 */}
-      <section className="card grid gap-5 p-5 sm:grid-cols-[1fr_auto]">
-        <div>
-          <h2 className="mb-3 font-extrabold">あなたの能力値</h2>
-          <div className="grid gap-3 sm:grid-cols-2 sm:gap-x-6">
-            {(Object.keys(STAT_LABELS) as StatKey[]).map((k) => (
-              <StatBar key={k} label={STAT_LABELS[k]} value={stats[k]} color={STAT_COLORS[k]} />
-            ))}
-          </div>
-        </div>
-        <div className="sm:w-40">
-          <h2 className="mb-3 font-extrabold">声の高さ</h2>
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-1">
-            {(Object.keys(VOICE_RANGES) as VoiceRange[]).map((r) => (
-              <button
-                key={r}
-                onClick={() => setRange(r)}
-                className={`rounded-2xl border-2 px-3 py-2 text-left transition ${range === r ? 'border-grape bg-grape/10' : 'border-cloud bg-white'}`}
-              >
-                <span className="block font-extrabold">{VOICE_RANGES[r].label}</span>
-                <span className="text-xs text-ink-soft">{VOICE_RANGES[r].sub}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <p className="text-center text-xs text-ink-soft/70">ver. {formatVersion(APP_VERSION)}</p>
     </div>
   )
 }

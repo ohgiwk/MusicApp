@@ -10,6 +10,7 @@ import {
 } from '../games/pitchTarget/grading'
 import { usePitchDetection, type PitchFrame } from '../hooks/usePitchDetection'
 import { useVoiceRange } from '../store/settingsStore'
+import { fromPitchTarget } from '../games/abilityScoring'
 import { useScoreStore, type RankResult } from '../store/scoreStore'
 import { useStatsStore } from '../store/statsStore'
 
@@ -24,6 +25,8 @@ interface RoundResult {
   grade: Grade | 'SKIP'
   meanAbs: number
   stdDev: number
+  /** クリアまでの時間 (ms)。スキップなら null */
+  clearMs: number | null
 }
 
 export function PitchTargetPage() {
@@ -36,7 +39,7 @@ export function PitchTargetPage() {
 
 function PitchTargetGame() {
   const range = useVoiceRange()
-  const record = useStatsStore((s) => s.record)
+  const recordPlay = useStatsStore((s) => s.recordPlay)
   const addScore = useScoreStore((s) => s.addScore)
   const [rank, setRank] = useState<RankResult | null>(null)
   const [phase, setPhase] = useState<Phase>('intro')
@@ -77,10 +80,17 @@ function PitchTargetGame() {
       const all = [...results, res]
       setResults(all)
       if (all.length >= ROUNDS) {
-        const graded = all.filter((r) => r.grade !== 'SKIP')
         const pts = all.reduce((a, r) => a + (r.grade === 'SKIP' ? 0 : GRADE_STYLE[r.grade].points), 0) / ROUNDS
-        const stab = graded.length ? graded.reduce((a, r) => a + r.stdDev, 0) / graded.length : 25
-        record({ accuracy: Math.round(pts), stability: Math.round(Math.max(0, 100 - stab * 4)) }, 'target')
+        recordPlay(
+          'target',
+          fromPitchTarget(
+            all.map((r) =>
+              r.grade === 'SKIP'
+                ? { meanAbs: null, stdDev: null, clearMs: null }
+                : { meanAbs: r.meanAbs, stdDev: r.stdDev, clearMs: r.clearMs },
+            ),
+          ),
+        )
         const perfects = all.filter((r) => r.grade === 'PERFECT').length
         setRank(addScore('target', Math.round(pts), `${range.label}・PERFECT ×${perfects}`))
         window.setTimeout(() => setPhase('result'), res.grade === 'SKIP' ? 0 : 1100)
@@ -91,7 +101,7 @@ function PitchTargetGame() {
         }, res.grade === 'SKIP' ? 0 : 1100)
       }
     },
-    [results, record, addScore, startRound, range.min, range.max, range.label],
+    [results, recordPlay, addScore, startRound, range.min, range.max, range.label],
   )
 
   const onFrame = useCallback(
@@ -121,7 +131,7 @@ function PitchTargetGame() {
         setLastGrade(grade)
         setPhase('clear')
         playChime('success')
-        finishRound({ target, grade, ...st })
+        finishRound({ target, grade, ...st, clearMs: now - s.startedAt })
       }
     },
     [phase, target, finishRound],
@@ -288,7 +298,7 @@ function PitchTargetGame() {
           onClick={() => {
             g.current.done = true
             setPhase('clear')
-            finishRound({ target, grade: 'SKIP', meanAbs: 100, stdDev: 50 })
+            finishRound({ target, grade: 'SKIP', meanAbs: 100, stdDev: 50, clearMs: null })
           }}
         >
           スキップ

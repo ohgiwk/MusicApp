@@ -30,8 +30,8 @@ export function GameCard({ to, icon, title, description, color, done, best, comp
         <Icon name={icon} size={compact ? 22 : 30} />
       </span>
       <span className="min-w-0 flex-1">
-        <span className="flex items-center gap-2 font-extrabold">
-          {title}
+        <span className="flex flex-wrap items-center gap-x-2 font-extrabold">
+          <span className="whitespace-nowrap">{title}</span>
           {done && (
             <span className="chip bg-mint/15 text-mint">
               <Icon name="check" size={12} /> 済

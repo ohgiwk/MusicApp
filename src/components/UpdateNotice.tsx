@@ -3,7 +3,7 @@ import { useAppUpdate } from '../hooks/useAppUpdate'
 import { Icon } from './Icon'
 
 /** 新しいバージョンがあるときに画面下に出す通知。更新はユーザーが押したときだけ行う */
-export function UpdateNotice() {
+export function UpdateNotice({ aboveTabBar = false }: { aboveTabBar?: boolean }) {
   const { available, update, dismiss } = useAppUpdate()
   const [updating, setUpdating] = useState(false)
   if (!available) return null
@@ -11,7 +11,9 @@ export function UpdateNotice() {
   return (
     <div
       role="status"
-      className="fixed inset-x-0 bottom-0 z-40 flex justify-center px-4 pb-[max(env(safe-area-inset-bottom),16px)]"
+      className={`fixed inset-x-0 z-40 flex justify-center px-4 ${
+        aboveTabBar ? 'bottom-[calc(64px+env(safe-area-inset-bottom))] pb-3' : 'bottom-0 pb-[max(env(safe-area-inset-bottom),16px)]'
+      }`}
     >
       {/* スマホ幅では 文言 / ボタン の2段、広い画面では1行 (文言が途中で折り返さないように) */}
       <div className="card animate-pop flex w-full max-w-md flex-col gap-3 !bg-white p-4 sm:max-w-lg sm:flex-row sm:items-center sm:py-3">

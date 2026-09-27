@@ -7,6 +7,7 @@ import { RankBadge } from '../components/RankBadge'
 import { OK_CENTS, generateMelody, scoreMelody, type MelodyScore, type PitchSample } from '../games/melodyCopy/scoring'
 import { usePitchDetection, type PitchFrame } from '../hooks/usePitchDetection'
 import { useVoiceRange } from '../store/settingsStore'
+import { fromMelodyCopy } from '../games/abilityScoring'
 import { useScoreStore, type RankResult } from '../store/scoreStore'
 import { useStatsStore } from '../store/statsStore'
 
@@ -25,7 +26,7 @@ export function MelodyCopyPage() {
 
 function MelodyCopyGame() {
   const range = useVoiceRange()
-  const record = useStatsStore((s) => s.record)
+  const recordPlay = useStatsStore((s) => s.recordPlay)
   const addScore = useScoreStore((s) => s.addScore)
   const [rank, setRank] = useState<RankResult | null>(null)
   const [level, setLevel] = useState(3)
@@ -88,9 +89,9 @@ function MelodyCopyGame() {
     setPhase('result')
     setActiveNote(-1)
     if (r.score >= 70) playChime('success')
-    record({ melody: r.score, accuracy: r.avgAbsCents === null ? 0 : Math.round(Math.max(0, 100 - r.avgAbsCents)) }, 'melody')
+    recordPlay('melody', fromMelodyCopy(r.score, r.avgAbsCents, melody.length))
     setRank(addScore('melody', r.score, `レベル${melody.length - 2}（${melody.length}音）・${r.correct}/${melody.length} 正解`))
-  }, [melody, record, addScore])
+  }, [melody, recordPlay, addScore])
 
   const onFrame = useCallback(
     (f: PitchFrame) => {
