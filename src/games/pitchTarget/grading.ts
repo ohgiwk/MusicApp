@@ -1,9 +1,7 @@
+import type { TargetLevel } from '../difficulty'
+
 export type Grade = 'PERFECT' | 'GREAT' | 'GOOD'
 
-/** 正解範囲 (cents) */
-export const HIT_RANGE = 25
-/** 正解範囲をこの時間 (ms) 維持するとクリア */
-export const HOLD_MS = 1500
 
 export const GRADE_STYLE: Record<Grade, { color: string; points: number }> = {
   PERFECT: { color: '#ff5fa2', points: 100 },
@@ -17,7 +15,7 @@ export interface HoldStats {
 }
 
 export function summarize(samples: number[]): HoldStats {
-  if (samples.length === 0) return { meanAbs: HIT_RANGE, stdDev: HIT_RANGE }
+  if (samples.length === 0) return { meanAbs: 25, stdDev: 25 }
   const meanAbs = samples.reduce((a, c) => a + Math.abs(c), 0) / samples.length
   const mean = samples.reduce((a, c) => a + c, 0) / samples.length
   const variance = samples.reduce((a, c) => a + (c - mean) ** 2, 0) / samples.length
@@ -43,12 +41,12 @@ export function centsToView(cents: number): number {
   return Math.sign(cents) * Math.pow(n, 0.65)
 }
 
-/** 目標音の候補 (幹音のみ、同じ音が続かないように) */
-export function pickTarget(min: number, max: number, prev?: number): number {
+/** 目標音を選ぶ (同じ音が続かないように)。難易度で音域の端と半音の有無を変える */
+export function pickTarget(min: number, max: number, level: TargetLevel, prev?: number): number {
   const candidates: number[] = []
-  for (let m = min + 2; m <= max - 2; m++) {
+  for (let m = min + level.rangeInset; m <= max - level.rangeInset; m++) {
     const pc = ((m % 12) + 12) % 12
-    if ([0, 2, 4, 5, 7, 9, 11].includes(pc) && m !== prev) candidates.push(m)
+    if ((level.sharps || [0, 2, 4, 5, 7, 9, 11].includes(pc)) && m !== prev) candidates.push(m)
   }
   return candidates[Math.floor(Math.random() * candidates.length)]
 }

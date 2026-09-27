@@ -1,10 +1,11 @@
-import { useMemo } from 'react'
+import { Fragment, useMemo } from 'react'
 import { Link } from 'react-router'
 import { Icon } from '../components/Icon'
 import { RadarChart } from '../components/RadarChart'
 import { StatBar } from '../components/StatBar'
 import { GAMES } from '../games/meta'
-import { useScoreStore } from '../store/scoreStore'
+import { DIFFICULTIES, DIFFICULTY_COLORS, DIFFICULTY_LABELS } from '../games/difficulty'
+import { rankingOf, useScoreStore } from '../store/scoreStore'
 import { VOICE_RANGES, useSettingsStore, type VoiceRange } from '../store/settingsStore'
 import {
   STAT_COLORS, STAT_HINTS, STAT_KEYS, STAT_LABELS, computeAbilities, streakOf, useStatsStore,
@@ -81,7 +82,10 @@ export function MyPage() {
               <Icon name={unmeasuredGame.icon} size={18} />
             </span>
             <span className="min-w-0 flex-1">
-              <span className="block">「{STAT_LABELS[unmeasuredKey!]}」を測ろう</span>
+              <span className="block">
+                <span className="whitespace-nowrap">「{STAT_LABELS[unmeasuredKey!]}」</span>
+                <span className="whitespace-nowrap">を測ろう</span>
+              </span>
               <span className="block text-xs text-ink-soft">{unmeasuredGame.title}で計測できます</span>
             </span>
             <Icon name="play" size={14} className="text-grape" />
@@ -97,21 +101,40 @@ export function MyPage() {
             ランキングを見る ›
           </Link>
         </div>
-        <div className="grid grid-cols-3 gap-2">
-          {GAMES.map((g) => {
-            const best = g.id !== 'monitor' ? records[g.id][0] : undefined
-            return (
-              <Link key={g.id} to={`/ranking?game=${g.id}`} className="rounded-2xl bg-cloud px-2 py-3 text-center">
-                <span className="mx-auto mb-1 grid h-8 w-8 place-items-center rounded-lg text-white" style={{ background: g.color }}>
-                  <Icon name={g.icon} size={16} />
+        {/* ゲーム × 難易度 の自己ベスト */}
+        <div className="grid grid-cols-[minmax(0,1fr)_repeat(3,3.6rem)] items-center gap-x-1.5 gap-y-2 text-center sm:grid-cols-[minmax(0,1fr)_repeat(3,5rem)]">
+          <span />
+          {DIFFICULTIES.map((d) => (
+            <span key={d} className="whitespace-nowrap text-[10px] font-extrabold" style={{ color: DIFFICULTY_COLORS[d] }}>
+              {DIFFICULTY_LABELS[d]}
+            </span>
+          ))}
+          {GAMES.map((g) => (
+            <Fragment key={g.id}>
+              <span className="flex min-w-0 items-center gap-2 text-left">
+                <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg text-white" style={{ background: g.color }}>
+                  <Icon name={g.icon} size={14} />
                 </span>
-                <p className="truncate text-[11px] font-bold text-ink-soft">{g.title}</p>
-                <p className="text-xl font-extrabold" style={{ color: best ? g.color : '#9a94b8' }}>
-                  {best?.score ?? '—'}
-                </p>
-              </Link>
-            )
-          })}
+                <span className="truncate text-xs font-bold">
+                  <span className="sm:hidden">{g.shortTitle}</span>
+                  <span className="hidden sm:inline">{g.title}</span>
+                </span>
+              </span>
+              {DIFFICULTIES.map((d) => {
+                const best = g.id !== 'monitor' ? rankingOf(records[g.id], d)[0] : undefined
+                return (
+                  <Link
+                    key={d}
+                    to={`/ranking?game=${g.id}&diff=${d}`}
+                    className="rounded-xl bg-cloud py-1.5 text-lg font-extrabold tabular-nums"
+                    style={{ color: best ? g.color : '#c9c3e0' }}
+                  >
+                    {best?.score ?? '—'}
+                  </Link>
+                )
+              })}
+            </Fragment>
+          ))}
         </div>
       </section>
 

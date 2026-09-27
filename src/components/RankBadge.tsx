@@ -8,7 +8,7 @@ export function RankBadge({ result, game }: { result: RankResult | null; game: R
   const { rank, isBest } = result
   return (
     <Link
-      to={`/ranking?game=${game}`}
+      to={`/ranking?game=${game}&diff=${result.difficulty}`}
       className={`animate-pop mx-auto flex w-fit items-center gap-2 rounded-full px-4 py-1.5 text-sm font-extrabold ${
         isBest ? 'bg-sun text-white shadow-[0_4px_12px_-4px_#ffb020]' : rank ? 'bg-grape/10 text-grape' : 'bg-cloud text-ink-soft'
       }`}

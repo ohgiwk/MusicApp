@@ -4,14 +4,15 @@ import { playChime, playMelody, playNote, type MelodyHandle } from '../audio/ton
 import { Icon } from '../components/Icon'
 import { MicPermissionGate } from '../components/MicPermissionGate'
 import { RankBadge } from '../components/RankBadge'
-import { OK_CENTS, generateMelody, scoreMelody, type MelodyScore, type PitchSample } from '../games/melodyCopy/scoring'
+import { generateMelody, scoreMelody, type MelodyScore, type PitchSample } from '../games/melodyCopy/scoring'
 import { usePitchDetection, type PitchFrame } from '../hooks/usePitchDetection'
-import { useVoiceRange } from '../store/settingsStore'
+import { DifficultyChip, DifficultySelect } from '../components/DifficultySelect'
+import { DIFFICULTY_LABELS, MELODY_LEVELS } from '../games/difficulty'
+import { useDifficulty, useVoiceRange } from '../store/settingsStore'
 import { fromMelodyCopy } from '../games/abilityScoring'
 import { useScoreStore, type RankResult } from '../store/scoreStore'
 import { useStatsStore } from '../store/statsStore'
 
-const NOTE_MS = 800
 const COUNT_IN = 3
 
 type Phase = 'ready' | 'listening' | 'waiting' | 'countin' | 'singing' | 'result'
@@ -26,11 +27,16 @@ export function MelodyCopyPage() {
 
 function MelodyCopyGame() {
   const range = useVoiceRange()
+  const difficulty = useDifficulty('melody')
+  const cfg = MELODY_LEVELS[difficulty]
+  /** 1音の長さ (難易度で変わる) */
+  const NOTE_MS = cfg.noteMs
   const recordPlay = useStatsStore((s) => s.recordPlay)
   const addScore = useScoreStore((s) => s.addScore)
   const [rank, setRank] = useState<RankResult | null>(null)
-  const [level, setLevel] = useState(3)
-  const [melody, setMelody] = useState(() => generateMelody(3, range.min, range.max))
+  /** 今のメロディの音数。クリアすると増える */
+  const [level, setLevel] = useState(cfg.startLength)
+  const [melody, setMelody] = useState(() => generateMelody(cfg.startLength, range.min, range.max, cfg))
   const [phase, setPhase] = useState<Phase>('ready')
   const [activeNote, setActiveNote] = useState(-1)
   const [countIn, setCountIn] = useState(0)
@@ -50,6 +56,19 @@ function MelodyCopyGame() {
     clearTimers()
     playback.current?.cancel()
   }, [])
+
+  // 難易度を変えたら最初の音数からやり直す
+  const prevDifficulty = useRef(difficulty)
+  useEffect(() => {
+    if (prevDifficulty.current === difficulty) return
+    prevDifficulty.current = difficulty
+    const c = MELODY_LEVELS[difficulty]
+    setLevel(c.startLength)
+    setMelody(generateMelody(c.startLength, range.min, range.max, c))
+    setResult(null)
+    setRank(null)
+    setPhase('ready')
+  }, [difficulty, range.min, range.max])
 
   const listen = async () => {
     setResult(null)
@@ -84,14 +103,14 @@ function MelodyCopyGame() {
   }
 
   const finish = useCallback(() => {
-    const r = scoreMelody(melody, samples.current, NOTE_MS)
+    const r = scoreMelody(melody, samples.current, NOTE_MS, cfg)
     setResult(r)
     setPhase('result')
     setActiveNote(-1)
     if (r.score >= 70) playChime('success')
     recordPlay('melody', fromMelodyCopy(r.score, r.avgAbsCents, melody.length))
-    setRank(addScore('melody', r.score, `レベル${melody.length - 2}（${melody.length}音）・${r.correct}/${melody.length} 正解`))
-  }, [melody, recordPlay, addScore])
+    setRank(addScore('melody', difficulty, r.score, `${melody.length}音・${r.correct}/${melody.length} 正解`))
+  }, [melody, recordPlay, addScore, NOTE_MS, cfg, difficulty])
 
   const onFrame = useCallback(
     (f: PitchFrame) => {
@@ -105,7 +124,7 @@ function MelodyCopyGame() {
         finish()
       }
     },
-    [phase, activeNote, melody.length, finish],
+    [phase, activeNote, melody.length, finish, NOTE_MS],
   )
 
   const { frame } = usePitchDetection({ onFrame, enabled: phase !== 'listening' })
@@ -113,7 +132,7 @@ function MelodyCopyGame() {
   const nextMelody = (lv: number) => {
     clearTimers()
     setLevel(lv)
-    setMelody(generateMelody(lv, range.min, range.max))
+    setMelody(generateMelody(lv, range.min, range.max, cfg))
     setResult(null)
     setPhase('ready')
   }
@@ -124,7 +143,10 @@ function MelodyCopyGame() {
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center justify-between">
-        <span className="chip bg-sun text-sm text-white">レベル {level - 2}（{level}音）</span>
+        <span className="flex items-center gap-1.5">
+          <DifficultyChip game="melody" />
+          <span className="chip bg-sun text-sm text-white">{level}音</span>
+        </span>
         <span className="text-sm font-bold text-ink-soft">
           {phase === 'ready' && 'まずはお手本を聞こう'}
           {phase === 'listening' && 'よく聞いてね…'}
@@ -144,15 +166,23 @@ function MelodyCopyGame() {
         liveMidi={phase === 'waiting' || phase === 'countin' || phase === 'singing' ? frame.midi : null}
         result={result}
         countIn={phase === 'countin' ? countIn : 0}
+        noteMs={NOTE_MS}
+        okCents={cfg.okCents}
       />
+
+      {phase === 'ready' && (
+        <div className="card flex justify-center p-4">
+          <DifficultySelect game="melody" />
+        </div>
+      )}
 
       {phase !== 'result' ? (
         <div className="flex gap-3">
-          <button className="btn-soft flex-1" onClick={() => void listen()} disabled={phase === 'listening' || phase === 'countin' || phase === 'singing'}>
+          <button className="btn-soft flex-1 whitespace-nowrap !px-3" onClick={() => void listen()} disabled={phase === 'listening' || phase === 'countin' || phase === 'singing'}>
             <Icon name="speaker" size={20} /> {phase === 'ready' ? 'お手本を聞く' : 'もう一度聞く'}
           </button>
           <button
-            className="btn-primary flex-1"
+            className="btn-primary flex-1 whitespace-nowrap !px-3"
             onClick={sing}
             disabled={phase === 'ready' || phase === 'listening' || phase === 'countin' || phase === 'singing'}
           >
@@ -165,8 +195,10 @@ function MelodyCopyGame() {
             result={result}
             onRetry={sing}
             onListen={() => void listen()}
-            onNext={() => nextMelody(result.score >= 70 ? Math.min(5, level + 1) : level)}
-            levelUp={result.score >= 70 && level < 5}
+            onNext={() => nextMelody(result.score >= 70 ? Math.min(cfg.maxLength, level + 1) : level)}
+            levelUp={result.score >= 70 && level < cfg.maxLength}
+            difficultyLabel={DIFFICULTY_LABELS[difficulty]}
+            onChangeDifficulty={() => nextMelody(cfg.startLength)}
             rank={rank}
           />
         )
@@ -187,10 +219,14 @@ interface GraphProps {
   liveMidi: number | null
   result: MelodyScore | null
   countIn: number
+  noteMs: number
+  okCents: number
 }
 
 /** 横方向のピッチバー + 歌声の軌跡 */
-function MelodyGraph({ melody, activeNote, showTargets, samples, cursorT, liveMidi, result, countIn }: GraphProps) {
+function MelodyGraph({ melody, activeNote, showTargets, samples, cursorT, liveMidi, result, countIn, noteMs, okCents }: GraphProps) {
+  const NOTE_MS = noteMs
+  const OK_CENTS = okCents
   const W = 600
   const H = 300
   const padL = 44
@@ -293,8 +329,10 @@ function MelodyGraph({ melody, activeNote, showTargets, samples, cursorT, liveMi
 }
 
 function ResultPanel({
-  result, onRetry, onListen, onNext, levelUp, rank,
+  result, onRetry, onListen, onNext, levelUp, rank, difficultyLabel, onChangeDifficulty,
 }: {
+  difficultyLabel: string
+  onChangeDifficulty: () => void
   result: MelodyScore
   onRetry: () => void
   onListen: () => void
@@ -309,7 +347,9 @@ function ResultPanel({
         <div>
           <p className="text-shine text-3xl font-extrabold">{title}</p>
           <p className="text-sm text-ink-soft">
-            <span className="whitespace-nowrap">{result.correct} / {result.notes.length} 音正解</span>
+            <span className="whitespace-nowrap">
+              {difficultyLabel}・{result.correct} / {result.notes.length} 音正解
+            </span>
             {result.avgAbsCents !== null && (
               <span className="block whitespace-nowrap sm:ml-2 sm:inline">平均誤差 {Math.round(result.avgAbsCents)} cents</span>
             )}
@@ -345,6 +385,9 @@ function ResultPanel({
           {levelUp ? 'レベルアップ！' : '次のメロディ'}
         </button>
       </div>
+      <button className="self-center text-xs font-bold text-ink-soft underline" onClick={onChangeDifficulty}>
+        難易度を変える
+      </button>
     </div>
   )
 }

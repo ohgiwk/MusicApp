@@ -7,14 +7,14 @@ import { ResultModal } from '../components/ResultModal'
 import { VoiceFlightEngine, type FlightStats } from '../games/voiceFlight/engine'
 import { useAnimationFrame } from '../hooks/useAnimationFrame'
 import { usePitchDetection } from '../hooks/usePitchDetection'
-import { useVoiceRange } from '../store/settingsStore'
+import { DifficultyChip, DifficultySelect } from '../components/DifficultySelect'
+import { DIFFICULTY_LABELS, FLIGHT_LEVELS } from '../games/difficulty'
+import { useDifficulty, useVoiceRange } from '../store/settingsStore'
 import { fromVoiceFlight } from '../games/abilityScoring'
 import { useScoreStore, type RankResult } from '../store/scoreStore'
 import { useStatsStore } from '../store/statsStore'
 
 const DURATION_MS = 60_000
-/** 画面の高さに割り当てる音域 (半音)。中心から ±6 = 1オクターブ */
-const HALF_WINDOW = 6
 const CALIBRATION_SAMPLES = 50
 
 type Phase = 'intro' | 'calibrate' | 'countdown' | 'play' | 'result'
@@ -29,6 +29,10 @@ export function VoiceFlightPage() {
 
 function VoiceFlightGame() {
   const range = useVoiceRange()
+  const difficulty = useDifficulty('flight')
+  const level = FLIGHT_LEVELS[difficulty]
+  /** 画面の高さに割り当てる音域 (中心から ±半音) */
+  const HALF_WINDOW = level.halfWindow
   const recordPlay = useStatsStore((s) => s.recordPlay)
   const addScore = useScoreStore((s) => s.addScore)
   const [rank, setRank] = useState<RankResult | null>(null)
@@ -56,7 +60,7 @@ function VoiceFlightGame() {
   })
 
   const newEngine = (c: number) => {
-    const e = new VoiceFlightEngine({ lowMidi: c - HALF_WINDOW, highMidi: c + HALF_WINDOW, durationMs: DURATION_MS })
+    const e = new VoiceFlightEngine({ lowMidi: c - HALF_WINDOW, highMidi: c + HALF_WINDOW, durationMs: DURATION_MS, level })
     const el = containerRef.current
     if (el) e.resize(el.clientWidth, el.clientHeight)
     engineRef.current = e
@@ -113,7 +117,7 @@ function VoiceFlightGame() {
         const s = e.stats
         const total = s.hits + s.misses
         recordPlay('flight', fromVoiceFlight(s))
-        setRank(addScore('flight', s.score, `${s.hits}/${total} ゲート・最大${s.maxCombo}コンボ`))
+        setRank(addScore('flight', difficulty, s.score, `${s.hits}/${total} ゲート・最大${s.maxCombo}コンボ`))
         phaseRef.current = 'result'
         setPhase('result')
       }
@@ -181,6 +185,7 @@ function VoiceFlightGame() {
               <br />
               ゲートの隙間（☆）をくぐってポイントを集めよう。
             </p>
+            <DifficultySelect game="flight" />
             <button className="btn-primary w-full max-w-xs text-lg" onClick={startCalibration}>
               <Icon name="play" size={18} /> はじめる
             </button>
@@ -218,7 +223,7 @@ function VoiceFlightGame() {
       </div>
 
       <p className="text-center text-xs text-ink-soft">
-        音域: {noteFromMidi(center - HALF_WINDOW).label} 〜 {noteFromMidi(center + HALF_WINDOW).label}（中心 {noteFromMidi(center).label}）
+        <DifficultyChip game="flight" /> 音域: {noteFromMidi(center - HALF_WINDOW).label} 〜 {noteFromMidi(center + HALF_WINDOW).label}（中心 {noteFromMidi(center).label}）
         {phase === 'play' || phase === 'result' ? (
           <button className="ml-2 underline" onClick={startCalibration}>
             中心を測り直す
@@ -229,9 +234,13 @@ function VoiceFlightGame() {
       {phase === 'result' && s && (
         <ResultModal
           title={s.hits / Math.max(1, total) >= 0.8 ? 'GREAT FLIGHT!' : 'NICE FLIGHT!'}
-          subtitle={`${s.hits} / ${total} ゲート通過`}
+          subtitle={`${DIFFICULTY_LABELS[difficulty]}・${s.hits} / ${total} ゲート通過`}
           score={s.score}
           onRetry={retry}
+          onChangeDifficulty={() => {
+            newEngine(center)
+            setPhase('intro')
+          }}
           badge={<RankBadge result={rank} game="flight" />}
         >
           <div className="grid grid-cols-3 gap-2 text-center">
@@ -247,8 +256,8 @@ function VoiceFlightGame() {
 
 function Overlay({ children }: { children: ReactNode }) {
   return (
-    <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-white/75 p-6 text-center backdrop-blur-sm">
-      {children}
+    <div className="absolute inset-0 overflow-y-auto bg-white/75 p-5 backdrop-blur-sm">
+      <div className="flex min-h-full flex-col items-center justify-center gap-4 text-center">{children}</div>
     </div>
   )
 }

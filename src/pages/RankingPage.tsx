@@ -1,7 +1,9 @@
 import { Link, useSearchParams } from 'react-router'
 import { Icon } from '../components/Icon'
 import { GAMES } from '../games/meta'
-import { RANKING_SIZE, useScoreStore, type RankedGameId } from '../store/scoreStore'
+import { DIFFICULTIES, DIFFICULTY_COLORS, DIFFICULTY_LABELS, type Difficulty } from '../games/difficulty'
+import { useSettingsStore } from '../store/settingsStore'
+import { RANKING_SIZE, rankingOf, useScoreStore, type RankedGameId } from '../store/scoreStore'
 
 const MEDALS = ['#ffb020', '#a9a6c4', '#d9905a']
 const SCORE_UNIT: Record<RankedGameId, string> = { target: '点', flight: 'pt', melody: '点' }
@@ -10,6 +12,10 @@ function formatDate(iso: string) {
   const d = new Date(iso)
   const p = (n: number) => String(n).padStart(2, '0')
   return `${d.getMonth() + 1}/${d.getDate()} ${p(d.getHours())}:${p(d.getMinutes())}`
+}
+
+function isDifficulty(v: string | null): v is Difficulty {
+  return v === 'easy' || v === 'normal' || v === 'hard'
 }
 
 function isRankedGame(v: string | null): v is RankedGameId {
@@ -21,7 +27,12 @@ export function RankingPage() {
   const q = params.get('game')
   const game: RankedGameId = isRankedGame(q) ? q : 'target'
   const meta = GAMES.find((g) => g.id === game)!
-  const records = useScoreStore((s) => s.records[game])
+  // 難易度の指定がなければ、そのゲームで今選んでいる難易度を表示する
+  const selected = useSettingsStore((s) => s.difficulty?.[game] ?? 'normal')
+  const qd = params.get('diff')
+  const difficulty: Difficulty = isDifficulty(qd) ? qd : selected
+  const all = useScoreStore((s) => s.records[game])
+  const records = rankingOf(all, difficulty)
   const lastId = useScoreStore((s) => s.lastIds[game])
   const clear = useScoreStore((s) => s.clear)
 
@@ -49,9 +60,35 @@ export function RankingPage() {
         })}
       </div>
 
+      {/* 難易度切り替え */}
+      <div className="grid grid-cols-3 gap-1.5 rounded-2xl bg-white/60 p-1" role="tablist" aria-label="難易度">
+        {DIFFICULTIES.map((d) => {
+          const active = d === difficulty
+          const count = rankingOf(all, d).length
+          return (
+            <button
+              key={d}
+              role="tab"
+              aria-selected={active}
+              onClick={() => setParams({ game, diff: d }, { replace: true })}
+              className={`whitespace-nowrap rounded-xl py-1.5 text-xs font-extrabold transition ${active ? 'text-white shadow' : 'text-ink-soft'}`}
+              style={active ? { background: DIFFICULTY_COLORS[d] } : undefined}
+            >
+              {DIFFICULTY_LABELS[d]}
+              {count > 0 && <span className="ml-1 opacity-75">{count}</span>}
+            </button>
+          )
+        })}
+      </div>
+
       <section className="card overflow-hidden">
         <div className="flex items-center justify-between px-5 pb-2 pt-4">
-          <h2 className="font-extrabold">自己ベスト TOP{RANKING_SIZE}</h2>
+          <h2 className="font-extrabold">
+            自己ベスト TOP{RANKING_SIZE}
+            <span className="ml-2 text-xs font-bold" style={{ color: DIFFICULTY_COLORS[difficulty] }}>
+              {DIFFICULTY_LABELS[difficulty]}
+            </span>
+          </h2>
           <Link to={meta.to} className="chip text-white" style={{ background: meta.color }}>
             <Icon name="play" size={12} /> プレイ
           </Link>
@@ -62,7 +99,7 @@ export function RankingPage() {
             <span className="grid h-14 w-14 place-items-center rounded-full bg-cloud text-ink-soft">
               <Icon name="trophy" size={28} />
             </span>
-            <p className="font-bold text-ink-soft">まだ記録がありません</p>
+            <p className="font-bold text-ink-soft">「{DIFFICULTY_LABELS[difficulty]}」の記録はまだありません</p>
             <Link to={meta.to} className="btn-primary">
               {meta.title}で遊ぶ
             </Link>
@@ -106,10 +143,10 @@ export function RankingPage() {
           <button
             className="underline"
             onClick={() => {
-              if (window.confirm(`${meta.title}の記録をすべて消去しますか？`)) clear(game)
+              if (window.confirm(`${meta.title}（${DIFFICULTY_LABELS[difficulty]}）の記録をすべて消去しますか？`)) clear(game, difficulty)
             }}
           >
-            {meta.title}の記録を消去
+            {meta.title}（{DIFFICULTY_LABELS[difficulty]}）の記録を消去
           </button>
         )}
       </div>

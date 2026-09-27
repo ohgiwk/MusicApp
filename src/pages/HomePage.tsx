@@ -2,7 +2,9 @@ import { Link } from 'react-router'
 import { GameCard } from '../components/GameCard'
 import { Icon } from '../components/Icon'
 import { GAMES, MONITOR } from '../games/meta'
-import { useScoreStore } from '../store/scoreStore'
+import { DIFFICULTY_LABELS } from '../games/difficulty'
+import { useSettingsStore } from '../store/settingsStore'
+import { rankingOf, useScoreStore } from '../store/scoreStore'
 import { isDoneToday, useStatsStore } from '../store/statsStore'
 
 // 今日のトレーニングメニュー (日替わりで順番を変える)
@@ -16,6 +18,7 @@ function todaysMenu() {
 export function HomePage() {
   const todayDone = useStatsStore((s) => s.todayDone)
   const records = useScoreStore((s) => s.records)
+  const difficulty = useSettingsStore((s) => s.difficulty)
   const menu = todaysMenu()
   const doneCount = menu.filter((g) => isDoneToday(todayDone, g.id)).length
   const next = menu.find((g) => !isDoneToday(todayDone, g.id))
@@ -70,14 +73,19 @@ export function HomePage() {
       <section>
         <h2 className="mb-3 px-1 font-extrabold">ミニゲーム</h2>
         <div className="grid gap-3 sm:grid-cols-3">
-          {GAMES.map((g) => (
-            <GameCard
-              key={g.id}
-              {...g}
-              done={isDoneToday(todayDone, g.id)}
-              best={g.id !== 'monitor' && records[g.id][0] ? `ベスト ${records[g.id][0].score}${g.id === 'flight' ? 'pt' : '点'}` : undefined}
-            />
-          ))}
+          {GAMES.map((g) => {
+            // 今選んでいる難易度での自己ベストを出す
+            const d = g.id !== 'monitor' ? (difficulty?.[g.id] ?? 'normal') : 'normal'
+            const best = g.id !== 'monitor' ? rankingOf(records[g.id], d)[0] : undefined
+            return (
+              <GameCard
+                key={g.id}
+                {...g}
+                done={isDoneToday(todayDone, g.id)}
+                best={best ? `ベスト ${best.score}${g.id === 'flight' ? 'pt' : '点'}（${DIFFICULTY_LABELS[d]}）` : undefined}
+              />
+            )
+          })}
         </div>
         <div className="mt-3">
           <GameCard {...MONITOR} compact />

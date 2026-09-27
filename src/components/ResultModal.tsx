@@ -10,10 +10,12 @@ interface Props {
   /** スコアの下に出す表示 (ランキング順位など) */
   badge?: ReactNode
   onRetry: () => void
+  /** 難易度選択 (スタート画面) に戻る */
+  onChangeDifficulty?: () => void
   retryLabel?: string
 }
 
-export function ResultModal({ title, subtitle, score, children, badge, onRetry, retryLabel = 'もう一回' }: Props) {
+export function ResultModal({ title, subtitle, score, children, badge, onRetry, onChangeDifficulty, retryLabel = 'もう一回' }: Props) {
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-ink/40 p-4 backdrop-blur-sm">
       <div className="card animate-pop w-full max-w-sm p-6 text-center">
@@ -34,9 +36,16 @@ export function ResultModal({ title, subtitle, score, children, badge, onRetry, 
           <button className="btn-primary" onClick={onRetry}>
             <Icon name="retry" size={18} /> {retryLabel}
           </button>
-          <Link to="/" className="btn-soft">
-            ホームへ
-          </Link>
+          <div className="flex gap-3">
+            {onChangeDifficulty && (
+              <button className="btn-soft flex-1 !px-3" onClick={onChangeDifficulty}>
+                難易度を変える
+              </button>
+            )}
+            <Link to="/" className="btn-soft flex-1 !px-3">
+              ホームへ
+            </Link>
+          </div>
         </div>
       </div>
     </div>

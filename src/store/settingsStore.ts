@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { parseNote } from '../audio/pitchUtils'
+import type { Difficulty, DifficultyGameId } from '../games/difficulty'
 
 export type VoiceRange = 'low' | 'high'
 
@@ -13,6 +14,9 @@ interface SettingsState {
   range: VoiceRange
   /** この音量 (RMS) 未満は無音扱い */
   noiseGate: number
+  /** ゲームごとの難易度 */
+  difficulty: Record<DifficultyGameId, Difficulty>
+  setDifficulty: (game: DifficultyGameId, d: Difficulty) => void
   setRange: (r: VoiceRange) => void
   setNoiseGate: (v: number) => void
 }
@@ -22,12 +26,18 @@ export const useSettingsStore = create<SettingsState>()(
     (set) => ({
       range: 'low',
       noiseGate: 0.01,
+      difficulty: { target: 'normal', flight: 'normal', melody: 'normal' },
+      setDifficulty: (game, d) => set((s) => ({ difficulty: { ...s.difficulty, [game]: d } })),
       setRange: (range) => set({ range }),
       setNoiseGate: (noiseGate) => set({ noiseGate }),
     }),
     { name: 'koeasobi-settings' },
   ),
 )
+
+export function useDifficulty(game: DifficultyGameId) {
+  return useSettingsStore((s) => s.difficulty?.[game] ?? 'normal')
+}
 
 export function useVoiceRange() {
   const range = useSettingsStore((s) => s.range)

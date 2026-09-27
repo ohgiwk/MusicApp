@@ -6,10 +6,12 @@ import { MicPermissionGate } from '../components/MicPermissionGate'
 import { RankBadge } from '../components/RankBadge'
 import { ResultModal } from '../components/ResultModal'
 import {
-  GRADE_STYLE, HIT_RANGE, HOLD_MS, VIEW_RANGE_CENTS, centsToView, gradeOf, pickTarget, summarize, type Grade,
+  GRADE_STYLE, VIEW_RANGE_CENTS, centsToView, gradeOf, pickTarget, summarize, type Grade,
 } from '../games/pitchTarget/grading'
 import { usePitchDetection, type PitchFrame } from '../hooks/usePitchDetection'
-import { useVoiceRange } from '../store/settingsStore'
+import { DifficultyChip, DifficultySelect } from '../components/DifficultySelect'
+import { DIFFICULTY_LABELS, TARGET_LEVELS } from '../games/difficulty'
+import { useDifficulty, useVoiceRange } from '../store/settingsStore'
 import { fromPitchTarget } from '../games/abilityScoring'
 import { useScoreStore, type RankResult } from '../store/scoreStore'
 import { useStatsStore } from '../store/statsStore'
@@ -39,12 +41,16 @@ export function PitchTargetPage() {
 
 function PitchTargetGame() {
   const range = useVoiceRange()
+  const difficulty = useDifficulty('target')
+  const level = TARGET_LEVELS[difficulty]
+  const HIT_RANGE = level.hitRange
+  const HOLD_MS = level.holdMs
   const recordPlay = useStatsStore((s) => s.recordPlay)
   const addScore = useScoreStore((s) => s.addScore)
   const [rank, setRank] = useState<RankResult | null>(null)
   const [phase, setPhase] = useState<Phase>('intro')
   const [round, setRound] = useState(0)
-  const [target, setTarget] = useState(() => pickTarget(range.min, range.max))
+  const [target, setTarget] = useState(() => pickTarget(range.min, range.max, level))
   const [results, setResults] = useState<RoundResult[]>([])
   const [lastGrade, setLastGrade] = useState<Grade | null>(null)
 
@@ -92,16 +98,16 @@ function PitchTargetGame() {
           ),
         )
         const perfects = all.filter((r) => r.grade === 'PERFECT').length
-        setRank(addScore('target', Math.round(pts), `${range.label}・PERFECT ×${perfects}`))
+        setRank(addScore('target', difficulty, Math.round(pts), `${range.label}・PERFECT ×${perfects}`))
         window.setTimeout(() => setPhase('result'), res.grade === 'SKIP' ? 0 : 1100)
       } else {
         window.setTimeout(() => {
           setRound((r) => r + 1)
-          startRound(pickTarget(range.min, range.max, res.target))
+          startRound(pickTarget(range.min, range.max, level, res.target))
         }, res.grade === 'SKIP' ? 0 : 1100)
       }
     },
-    [results, recordPlay, addScore, startRound, range.min, range.max, range.label],
+    [results, recordPlay, addScore, startRound, range.min, range.max, range.label, difficulty, level],
   )
 
   const onFrame = useCallback(
@@ -134,7 +140,7 @@ function PitchTargetGame() {
         finishRound({ target, grade, ...st, clearMs: now - s.startedAt })
       }
     },
-    [phase, target, finishRound],
+    [phase, target, finishRound, HIT_RANGE, HOLD_MS],
   )
 
   const { frame } = usePitchDetection({ onFrame, enabled: phase !== 'result' })
@@ -143,7 +149,14 @@ function PitchTargetGame() {
     setRank(null)
     setResults([])
     setRound(0)
-    startRound(pickTarget(range.min, range.max))
+    startRound(pickTarget(range.min, range.max, level))
+  }
+
+  const backToIntro = () => {
+    setRank(null)
+    setResults([])
+    setRound(0)
+    setPhase('intro')
   }
 
   const totalScore = Math.round(
@@ -164,7 +177,15 @@ function PitchTargetGame() {
           光るゾーン（±{HIT_RANGE} cents）に声を <b>{HOLD_MS / 1000}秒</b> キープでクリア！
         </p>
         <p className="text-sm text-ink-soft">全{ROUNDS}問 / 声の高さ: {range.label}（{range.sub}）</p>
-        <button className="btn-primary w-full max-w-xs text-lg" onClick={() => startRound(target)}>
+        <DifficultySelect game="target" />
+        <button
+          className="btn-primary w-full max-w-xs text-lg"
+          onClick={() => {
+            setResults([])
+            setRound(0)
+            startRound(pickTarget(range.min, range.max, level))
+          }}
+        >
           <Icon name="play" size={18} /> スタート
         </button>
       </div>
@@ -199,7 +220,10 @@ function PitchTargetGame() {
             )
           })}
         </div>
-        <span className="chip bg-white text-ink">{round + 1} / {ROUNDS}</span>
+        <span className="flex items-center gap-1.5">
+          <DifficultyChip game="target" />
+          <span className="chip bg-white text-ink">{round + 1} / {ROUNDS}</span>
+        </span>
       </div>
 
       <div className="text-center">
@@ -306,7 +330,7 @@ function PitchTargetGame() {
       </div>
 
       {phase === 'result' && (
-        <ResultModal title={totalScore >= 90 ? 'PERFECT!' : totalScore >= 70 ? 'GREAT!' : 'GOOD!'} score={totalScore} onRetry={restart} badge={<RankBadge result={rank} game="target" />}>
+        <ResultModal title={totalScore >= 90 ? 'PERFECT!' : totalScore >= 70 ? 'GREAT!' : 'GOOD!'} score={totalScore} onRetry={restart} onChangeDifficulty={backToIntro} subtitle={DIFFICULTY_LABELS[difficulty]} badge={<RankBadge result={rank} game="target" />}>
           <ul className="flex flex-col gap-1.5">
             {results.map((r, i) => (
               <li key={i} className="flex items-center justify-between rounded-xl bg-cloud px-3 py-1.5 text-sm">

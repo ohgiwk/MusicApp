@@ -1,4 +1,5 @@
 import { clamp, isNatural, noteFromMidi } from '../../audio/pitchUtils'
+import type { FlightLevel } from '../difficulty'
 
 /**
  * ボイスフライトのゲームロジックと Canvas 描画。React からは独立。
@@ -9,6 +10,7 @@ export interface FlightConfig {
   lowMidi: number
   highMidi: number
   durationMs: number
+  level: FlightLevel
 }
 
 interface Gate {
@@ -97,7 +99,7 @@ export class VoiceFlightEngine {
   /** 横スクロール速度 (px/s)。後半ほど少し速く */
   private get speed() {
     const t = this.elapsed / this.cfg.durationMs
-    return clamp(this.w / 4.2, 90, 220) * (1 + t * 0.35)
+    return clamp(this.w / 4.2, 90, 220) * (1 + t * 0.35) * this.cfg.level.speedMul
   }
 
   midiToY(midi: number): number {
@@ -153,7 +155,8 @@ export class VoiceFlightEngine {
     this.spawnTimer -= dtMs
     if (this.spawnTimer <= 0 && this.stats.remainingMs > 2500) {
       this.spawnGate()
-      this.spawnTimer = 2100 - (this.elapsed / this.cfg.durationMs) * 500
+      const { spawnStart, spawnEnd } = this.cfg.level
+      this.spawnTimer = spawnStart + (spawnEnd - spawnStart) * (this.elapsed / this.cfg.durationMs)
     }
     for (const g of this.gates) {
       g.x -= sp * dt
@@ -184,14 +187,16 @@ export class VoiceFlightEngine {
     // 前のゲートから ±4 半音以内で次の音を選ぶ (幹音を優先)
     const candidates: number[] = []
     for (let m = Math.ceil(lowMidi + 1); m <= highMidi - 1; m++) {
-      if (Math.abs(m - this.lastGateMidi) <= 4 && m !== this.lastGateMidi && isNatural(m)) candidates.push(m)
+      const { maxStep, sharps } = this.cfg.level
+      if (Math.abs(m - this.lastGateMidi) <= maxStep && m !== this.lastGateMidi && (sharps || isNatural(m))) candidates.push(m)
     }
     const midi = candidates.length
       ? candidates[Math.floor(Math.random() * candidates.length)]
       : Math.round((lowMidi + highMidi) / 2)
     this.lastGateMidi = midi
     const t = this.elapsed / this.cfg.durationMs
-    this.gates.push({ x: this.w + 40, midi, halfGap: 1.25 - t * 0.35, state: 'pending' })
+    const { gapStart, gapEnd } = this.cfg.level
+    this.gates.push({ x: this.w + 40, midi, halfGap: gapStart + (gapEnd - gapStart) * t, state: 'pending' })
   }
 
   private judgeGate(g: Gate) {
