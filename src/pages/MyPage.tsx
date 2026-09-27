@@ -7,6 +7,7 @@ import { GAMES } from '../games/meta'
 import { DIFFICULTIES, DIFFICULTY_COLORS, DIFFICULTY_LABELS } from '../games/difficulty'
 import { rankingOf, useScoreStore } from '../store/scoreStore'
 import { VOICE_RANGES, useSettingsStore, type VoiceRange } from '../store/settingsStore'
+import { SoundSettings } from '../components/SoundSettings'
 import {
   STAT_COLORS, STAT_HINTS, STAT_KEYS, STAT_LABELS, computeAbilities, streakOf, useStatsStore,
 } from '../store/statsStore'
@@ -137,6 +138,9 @@ export function MyPage() {
           ))}
         </div>
       </section>
+
+      {/* サウンド */}
+      <SoundSettings />
 
       {/* 設定 */}
       <section className="card p-5">

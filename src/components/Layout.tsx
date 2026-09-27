@@ -1,4 +1,5 @@
 import { Link, Outlet, useLocation } from 'react-router'
+import { useBgm } from '../hooks/useBgm'
 import { Icon } from './Icon'
 import { TABS, TabBar } from './TabBar'
 import { UpdateNotice } from './UpdateNotice'
@@ -17,6 +18,8 @@ export function Layout() {
   const isHome = pathname === '/'
   // タブ画面 (ホーム/ランキング/マイページ) では下部タブを出し、ゲーム中は隠して戻るボタンにする
   const isTab = TABS.some((t) => t.to === pathname)
+  // BGM はメニュー (タブ画面) だけ。ゲーム画面ではマイクが拾わないよう止める
+  useBgm(isTab)
 
   return (
     <div

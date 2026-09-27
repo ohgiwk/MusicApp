@@ -1,7 +1,7 @@
 import type { ReactNode, SVGProps } from 'react'
 
 export type IconName =
-  | 'target' | 'rocket' | 'music' | 'mic' | 'back' | 'play' | 'speaker' | 'trophy' | 'wave' | 'retry' | 'check' | 'home' | 'user'
+  | 'target' | 'rocket' | 'music' | 'mic' | 'back' | 'play' | 'speaker' | 'trophy' | 'wave' | 'retry' | 'check' | 'home' | 'user' | 'mute'
 
 const PATHS: Record<IconName, ReactNode> = {
   target: (
@@ -53,6 +53,12 @@ const PATHS: Record<IconName, ReactNode> = {
     </>
   ),
   check: <path d="M5 12.5l4.5 4.5L19 7" />,
+  mute: (
+    <>
+      <path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor" />
+      <path d="M17 9.5l5 5M22 9.5l-5 5" />
+    </>
+  ),
   home: (
     <>
       <path d="M4 11l8-7 8 7" />

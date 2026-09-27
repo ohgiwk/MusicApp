@@ -1,4 +1,5 @@
 import { Link } from 'react-router'
+import { BgmToggle } from '../components/BgmToggle'
 import { GameCard } from '../components/GameCard'
 import { Icon } from '../components/Icon'
 import { GAMES, MONITOR } from '../games/meta'
@@ -29,10 +30,11 @@ export function HomePage() {
         <div className="animate-float grid h-16 w-16 shrink-0 place-items-center rounded-3xl bg-gradient-to-br from-grape to-bubble text-white shadow-lg">
           <Icon name="mic" size={34} />
         </div>
-        <div>
+        <div className="min-w-0 flex-1">
           <p className="text-sm font-bold text-ink-soft">こえあそび</p>
           <h1 className="text-2xl font-extrabold sm:text-3xl">今日も声で遊ぼう！</h1>
         </div>
+        <BgmToggle />
       </section>
 
       {/* 今日のトレーニング */}

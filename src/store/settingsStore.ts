@@ -17,6 +17,12 @@ interface SettingsState {
   /** ゲームごとの難易度 */
   difficulty: Record<DifficultyGameId, Difficulty>
   setDifficulty: (game: DifficultyGameId, d: Difficulty) => void
+  /** メニュー画面の BGM */
+  bgmEnabled: boolean
+  /** 0〜1 */
+  bgmVolume: number
+  setBgmEnabled: (v: boolean) => void
+  setBgmVolume: (v: number) => void
   setRange: (r: VoiceRange) => void
   setNoiseGate: (v: number) => void
 }
@@ -28,6 +34,10 @@ export const useSettingsStore = create<SettingsState>()(
       noiseGate: 0.01,
       difficulty: { target: 'normal', flight: 'normal', melody: 'normal' },
       setDifficulty: (game, d) => set((s) => ({ difficulty: { ...s.difficulty, [game]: d } })),
+      bgmEnabled: true,
+      bgmVolume: 0.5,
+      setBgmEnabled: (bgmEnabled) => set({ bgmEnabled }),
+      setBgmVolume: (bgmVolume) => set({ bgmVolume }),
       setRange: (range) => set({ range }),
       setNoiseGate: (noiseGate) => set({ noiseGate }),
     }),
