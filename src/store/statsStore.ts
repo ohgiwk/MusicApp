@@ -43,8 +43,10 @@ interface StatsState {
   /** プレイした日 (YYYY-MM-DD, 重複なし) */
   playDays: string[]
   todayDone: string[]
-  /** 1プレイ分の計測値を記録する */
+  /** 1プレイ分の計測値を記録する (プレイ回数も数える) */
   recordPlay: (gameId: string, sample: Partial<Record<StatKey, number>>) => void
+  /** 能力値を測らないゲーム (耳トレ) のプレイ回数・今日のトレーニングだけを記録する */
+  markPlayed: (gameId: string) => void
   resetStats: () => void
 }
 
@@ -52,6 +54,16 @@ const localDay = (d = new Date()) =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 
 const emptySamples = (): Record<StatKey, StatSample[]> => ({ accuracy: [], stability: [], control: [], melody: [] })
+
+/** プレイ回数・プレイした日・今日のトレーニングの更新 */
+function playedUpdate(s: Pick<StatsState, 'plays' | 'playDays' | 'todayDone'>, gameId: string) {
+  const day = localDay()
+  return {
+    plays: s.plays + 1,
+    playDays: s.playDays.includes(day) ? s.playDays : [...s.playDays, day].slice(-400),
+    todayDone: s.todayDone.filter((d) => d.startsWith(day)).concat(`${day}:${gameId}`),
+  }
+}
 
 export const useStatsStore = create<StatsState>()(
   persist(
@@ -69,14 +81,9 @@ export const useStatsStore = create<StatsState>()(
             if (v === undefined) continue
             samples[k] = [...samples[k], { v, at, game: gameId }].slice(-MAX_SAMPLES)
           }
-          const day = localDay()
-          return {
-            samples,
-            plays: s.plays + 1,
-            playDays: s.playDays.includes(day) ? s.playDays : [...s.playDays, day].slice(-400),
-            todayDone: s.todayDone.filter((d) => d.startsWith(day)).concat(`${day}:${gameId}`),
-          }
+          return { samples, ...playedUpdate(s, gameId) }
         }),
+      markPlayed: (gameId) => set((s) => playedUpdate(s, gameId)),
       resetStats: () => set({ samples: emptySamples(), plays: 0, playDays: [], todayDone: [] }),
     }),
     {

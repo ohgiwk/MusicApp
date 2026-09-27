@@ -144,12 +144,6 @@ export const MELODY_LEVELS: Record<Difficulty, MelodyLevel> = {
   },
 }
 
-export const DIFFICULTY_DESCRIPTIONS: Record<DifficultyGameId, Record<Difficulty, string>> = {
-  target: { easy: TARGET_LEVELS.easy.desc, normal: TARGET_LEVELS.normal.desc, hard: TARGET_LEVELS.hard.desc },
-  flight: { easy: FLIGHT_LEVELS.easy.desc, normal: FLIGHT_LEVELS.normal.desc, hard: FLIGHT_LEVELS.hard.desc },
-  melody: { easy: MELODY_LEVELS.easy.desc, normal: MELODY_LEVELS.normal.desc, hard: MELODY_LEVELS.hard.desc },
-}
-
 // ------------------------------------------------------------------ 耳トレ (マイク不要) のゲーム
 
 export interface HighLowLevel {
@@ -234,9 +228,9 @@ const descsOf = (levels: Record<Difficulty, { desc: string }>) => ({
 
 /** ゲームごとに選べるレベル (ランキングもこの単位で分ける) */
 export const GAME_LEVELS: Record<LevelGameId, LevelOption[]> = {
-  target: difficultyOptions(DIFFICULTY_DESCRIPTIONS.target),
-  flight: difficultyOptions(DIFFICULTY_DESCRIPTIONS.flight),
-  melody: difficultyOptions(DIFFICULTY_DESCRIPTIONS.melody),
+  target: difficultyOptions(descsOf(TARGET_LEVELS)),
+  flight: difficultyOptions(descsOf(FLIGHT_LEVELS)),
+  melody: difficultyOptions(descsOf(MELODY_LEVELS)),
   highlow: difficultyOptions(descsOf(HIGHLOW_LEVELS)),
   memory: difficultyOptions(descsOf(MEMORY_LEVELS)),
   distance: DISTANCE_LEVEL_IDS.map((id) => ({ id, ...DISTANCE_LEVELS[id] })),

@@ -111,7 +111,3 @@ export const useScoreStore = create<ScoreState>()(
     },
   ),
 )
-
-export function useBestScore(game: RankedGameId, difficulty: string): number | null {
-  return useScoreStore((s) => rankingOf(s.records[game], difficulty)[0]?.score ?? null)
-}

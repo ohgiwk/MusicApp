@@ -14,9 +14,9 @@ interface SettingsState {
   range: VoiceRange
   /** この音量 (RMS) 未満は無音扱い */
   noiseGate: number
-  /** ゲームごとの難易度 (レベル) */
-  difficulty: Partial<Record<LevelGameId, string>>
-  setDifficulty: (game: LevelGameId, level: string) => void
+  /** ゲームごとに選んでいるレベル (難易度) の id */
+  levels: Partial<Record<LevelGameId, string>>
+  setLevel: (game: LevelGameId, level: string) => void
   /** メニュー画面の BGM */
   bgmEnabled: boolean
   /** 0〜1 */
@@ -32,8 +32,8 @@ export const useSettingsStore = create<SettingsState>()(
     (set) => ({
       range: 'low',
       noiseGate: 0.01,
-      difficulty: { target: 'normal', flight: 'normal', melody: 'normal' },
-      setDifficulty: (game, d) => set((s) => ({ difficulty: { ...s.difficulty, [game]: d } })),
+      levels: {},
+      setLevel: (game, level) => set((s) => ({ levels: { ...s.levels, [game]: level } })),
       bgmEnabled: true,
       bgmVolume: 0.5,
       setBgmEnabled: (bgmEnabled) => set({ bgmEnabled }),
@@ -41,18 +41,30 @@ export const useSettingsStore = create<SettingsState>()(
       setRange: (range) => set({ range }),
       setNoiseGate: (noiseGate) => set({ noiseGate }),
     }),
-    { name: 'koeasobi-settings' },
+    {
+      name: 'koeasobi-settings',
+      version: 1,
+      // v0 はレベルを difficulty という名前で保存していた
+      migrate: (old, version) => {
+        const o = (old ?? {}) as Partial<SettingsState> & { difficulty?: SettingsState['levels'] }
+        if (version < 1) {
+          const { difficulty, ...rest } = o
+          return { ...rest, levels: { ...difficulty, ...rest.levels } } as SettingsState
+        }
+        return o as SettingsState
+      },
+    },
   ),
 )
 
 /** 声のゲーム (かんたん/ふつう/むずかしい) の難易度 */
 export function useDifficulty(game: DifficultyGameId): Difficulty {
-  return useSettingsStore((s) => (s.difficulty?.[game] ?? 'normal') as Difficulty)
+  return useSettingsStore((s) => (s.levels?.[game] ?? DEFAULT_LEVEL[game]) as Difficulty)
 }
 
 /** 任意のゲームのレベル id */
 export function useLevel(game: LevelGameId): string {
-  return useSettingsStore((s) => s.difficulty?.[game] ?? DEFAULT_LEVEL[game])
+  return useSettingsStore((s) => s.levels?.[game] ?? DEFAULT_LEVEL[game])
 }
 
 export function useVoiceRange() {

@@ -7,7 +7,7 @@ import { ResultModal } from '../components/ResultModal'
 import { VoiceFlightEngine, type FlightStats } from '../games/voiceFlight/engine'
 import { useAnimationFrame } from '../hooks/useAnimationFrame'
 import { usePitchDetection } from '../hooks/usePitchDetection'
-import { DifficultyChip, DifficultySelect } from '../components/DifficultySelect'
+import { LevelChip, LevelSelect } from '../components/LevelSelect'
 import { DIFFICULTY_LABELS, FLIGHT_LEVELS } from '../games/difficulty'
 import { useDifficulty, useVoiceRange } from '../store/settingsStore'
 import { fromVoiceFlight } from '../games/abilityScoring'
@@ -201,7 +201,7 @@ function VoiceFlightGame() {
               <br />
               ゲートの隙間（☆）をくぐってポイントを集めよう。
             </p>
-            <DifficultySelect game="flight" />
+            <LevelSelect game="flight" />
             <button className="btn-primary w-full max-w-xs text-lg" onClick={startCalibration}>
               <Icon name="play" size={18} /> はじめる
             </button>
@@ -242,7 +242,7 @@ function VoiceFlightGame() {
       </div>
 
       <p className="text-center text-xs text-ink-soft">
-        <DifficultyChip game="flight" /> 音域: {noteFromMidi(center - HALF_WINDOW).label} 〜{' '}
+        <LevelChip game="flight" /> 音域: {noteFromMidi(center - HALF_WINDOW).label} 〜{' '}
         {noteFromMidi(center + HALF_WINDOW).label}（中心 {noteFromMidi(center).label}）
         {phase === 'play' || phase === 'result' ? (
           <button className="ml-2 underline" onClick={startCalibration}>

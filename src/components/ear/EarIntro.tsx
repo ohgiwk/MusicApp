@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import type { LevelGameId } from '../../games/difficulty'
 import type { GameMeta } from '../../games/meta'
-import { DifficultySelect } from '../DifficultySelect'
+import { LevelSelect } from '../LevelSelect'
 import { Icon } from '../Icon'
 
 /** 耳トレ共通のスタート画面 */
@@ -43,7 +43,7 @@ export function EarIntro({
         <p className="text-lg font-extrabold">{meta.description}</p>
       </div>
       <div className="text-sm leading-relaxed text-ink-soft">{children}</div>
-      <DifficultySelect game={meta.id as LevelGameId} label={levelLabel} />
+      <LevelSelect game={meta.id as LevelGameId} label={levelLabel} />
       <button className="btn-primary w-full max-w-xs text-lg" onClick={onStart}>
         <Icon name="play" size={18} /> スタート
       </button>

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { playChime, type MelodyHandle } from '../../audio/tonePlayer'
-import { DifficultyChip } from '../../components/DifficultySelect'
+import { LevelChip } from '../../components/LevelSelect'
 import { EarHud } from '../../components/ear/EarHud'
 import { EarIntro } from '../../components/ear/EarIntro'
 import { FeedbackBanner } from '../../components/ear/FeedbackBanner'
@@ -37,10 +37,10 @@ const NOTE_SEC = 0.9
 
 export function DistancePage() {
   const level = useLevel('distance') as DistanceLevelId
-  const setDifficulty = useSettingsStore((s) => s.setDifficulty)
+  const setLevel = useSettingsStore((s) => s.setLevel)
   const session = useEarSession(QUESTIONS.distance)
   const addScore = useScoreStore((s) => s.addScore)
-  const recordPlay = useStatsStore((s) => s.recordPlay)
+  const markPlayed = useStatsStore((s) => s.markPlayed)
   const recordDistance = useEarStore((s) => s.recordDistance)
 
   const [phase, setPhase] = useState<Phase>('intro')
@@ -52,7 +52,15 @@ export function DistancePage() {
   const [rank, setRank] = useState<RankResult | null>(null)
   const playback = useRef<MelodyHandle | null>(null)
 
-  useEffect(() => () => playback.current?.cancel(), [])
+  // 画面を離れたら、再生と「次の問題を鳴らす」予約を止める
+  const askTimer = useRef(0)
+  useEffect(
+    () => () => {
+      playback.current?.cancel()
+      window.clearTimeout(askTimer.current)
+    },
+    [],
+  )
 
   const play = useCallback(async (q: DistanceQuestion, then: Phase) => {
     // 回答後の聴き直しは結果表示のまま鳴らす
@@ -70,7 +78,8 @@ export function DistancePage() {
     setFeedback(null)
     // 再生が始まるまでの間も「再生中」扱いにして、次の問題の答えを先に見せない
     setPhase('playing')
-    window.setTimeout(() => void play(q, 'answer'), 250)
+    window.clearTimeout(askTimer.current)
+    askTimer.current = window.setTimeout(() => void play(q, 'answer'), 250)
   }
 
   const start = () => {
@@ -101,7 +110,7 @@ export function DistancePage() {
           `${session.correct}/${session.total} 正解・最大${session.maxCombo}COMBO`,
         ),
       )
-      recordPlay('distance', {})
+      markPlayed('distance')
       recordDistance(levelNumber(level), accuracy)
       setPhase('result')
       return
@@ -173,7 +182,7 @@ export function DistancePage() {
             </div>
             <p className="text-2xl font-extrabold">{lv >= 3 ? '何半音動いた？' : '音はどう動いた？'}</p>
             <p className="flex items-center gap-2 text-xs font-bold text-ink-soft">
-              <DifficultyChip game="distance" />
+              <LevelChip game="distance" />
               {lv === 2 && `少し = ${SMALL_MAX}半音以内 / 大きく = ${LARGE_MIN}半音以上`}
               {lv >= 3 && '上か下かは気にせず、動いた幅を答えよう'}
             </p>
@@ -254,7 +263,7 @@ export function DistancePage() {
               className="btn w-full text-white"
               style={{ background: DISTANCE_LEVELS[nextLevel].color }}
               onClick={() => {
-                setDifficulty('distance', nextLevel)
+                setLevel('distance', nextLevel)
                 setPhase('intro')
               }}
             >

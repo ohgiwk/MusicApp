@@ -6,7 +6,7 @@ import { MicPermissionGate } from '../components/MicPermissionGate'
 import { RankBadge } from '../components/RankBadge'
 import { generateMelody, scoreMelody, type MelodyScore, type PitchSample } from '../games/melodyCopy/scoring'
 import { usePitchDetection, type PitchFrame } from '../hooks/usePitchDetection'
-import { DifficultyChip, DifficultySelect } from '../components/DifficultySelect'
+import { LevelChip, LevelSelect } from '../components/LevelSelect'
 import { DIFFICULTY_LABELS, MELODY_LEVELS } from '../games/difficulty'
 import { useDifficulty, useVoiceRange } from '../store/settingsStore'
 import { fromMelodyCopy } from '../games/abilityScoring'
@@ -80,8 +80,8 @@ function MelodyCopyGame() {
     setResult(null)
     setPhase('listening')
     playback.current = playMelody(melody, NOTE_MS / 1000, setActiveNote)
-    await playback.current.done
-    setPhase('waiting')
+    // 途中で止めた (画面を離れた等) ときは進めない
+    if (await playback.current.done) setPhase('waiting')
   }
 
   const sing = () => {
@@ -150,7 +150,7 @@ function MelodyCopyGame() {
     <div className="flex flex-col gap-3">
       <div className="flex items-center justify-between">
         <span className="flex items-center gap-1.5">
-          <DifficultyChip game="melody" />
+          <LevelChip game="melody" />
           <span className="chip bg-sun text-sm text-white">{level}音</span>
         </span>
         <span className="text-sm font-bold text-ink-soft">
@@ -178,7 +178,7 @@ function MelodyCopyGame() {
 
       {phase === 'ready' && (
         <div className="card flex justify-center p-4">
-          <DifficultySelect game="melody" />
+          <LevelSelect game="melody" />
         </div>
       )}
 

@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { centsBetween, foldOctave, midiToFreq, noteFromMidi } from '../audio/pitchUtils'
 import { playChime, playNote } from '../audio/tonePlayer'
 import { Icon } from '../components/Icon'
@@ -15,7 +15,7 @@ import {
   type Grade,
 } from '../games/pitchTarget/grading'
 import { usePitchDetection, type PitchFrame } from '../hooks/usePitchDetection'
-import { DifficultyChip, DifficultySelect } from '../components/DifficultySelect'
+import { LevelChip, LevelSelect } from '../components/LevelSelect'
 import { DIFFICULTY_LABELS, TARGET_LEVELS } from '../games/difficulty'
 import { useDifficulty, useVoiceRange } from '../store/settingsStore'
 import { fromPitchTarget } from '../games/abilityScoring'
@@ -85,8 +85,20 @@ function PitchTargetGame() {
     done: false,
   })
 
+  // 画面を離れたら、次の問題への切り替えと鳴っているお手本を止める
+  const roundTimer = useRef(0)
+  const stopTone = useRef<() => void>(() => {})
+  useEffect(
+    () => () => {
+      window.clearTimeout(roundTimer.current)
+      stopTone.current()
+    },
+    [],
+  )
+
   const playReference = useCallback(() => {
-    playNote(target, TONE_SEC)
+    stopTone.current()
+    stopTone.current = playNote(target, TONE_SEC)
     // お手本の音をマイクが拾って自動クリアしないよう、再生中は判定を止める
     g.current.listenAfter = performance.now() + TONE_SEC * 1000 + 250
   }, [target])
@@ -104,7 +116,8 @@ function PitchTargetGame() {
     setLastGrade(null)
     setView(EMPTY_VIEW)
     setPhase('play')
-    playNote(t, TONE_SEC)
+    stopTone.current()
+    stopTone.current = playNote(t, TONE_SEC)
     g.current.listenAfter = performance.now() + TONE_SEC * 1000 + 250
   }, [])
 
@@ -126,9 +139,9 @@ function PitchTargetGame() {
         )
         const perfects = all.filter((r) => r.grade === 'PERFECT').length
         setRank(addScore('target', difficulty, Math.round(pts), `${range.label}・PERFECT ×${perfects}`))
-        window.setTimeout(() => setPhase('result'), res.grade === 'SKIP' ? 0 : 1100)
+        roundTimer.current = window.setTimeout(() => setPhase('result'), res.grade === 'SKIP' ? 0 : 1100)
       } else {
-        window.setTimeout(
+        roundTimer.current = window.setTimeout(
           () => {
             setRound((r) => r + 1)
             startRound(pickTarget(range.min, range.max, level, res.target))
@@ -214,7 +227,7 @@ function PitchTargetGame() {
         <p className="text-sm text-ink-soft">
           全{ROUNDS}問 / 声の高さ: {range.label}（{range.sub}）
         </p>
-        <DifficultySelect game="target" />
+        <LevelSelect game="target" />
         <button
           className="btn-primary w-full max-w-xs text-lg"
           onClick={() => {
@@ -267,7 +280,7 @@ function PitchTargetGame() {
           })}
         </div>
         <span className="flex items-center gap-1.5">
-          <DifficultyChip game="target" />
+          <LevelChip game="target" />
           <span className="chip bg-white text-ink">
             {round + 1} / {ROUNDS}
           </span>

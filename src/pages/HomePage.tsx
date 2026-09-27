@@ -30,7 +30,7 @@ type Filter = 'all' | Skill
 export function HomePage() {
   const todayDone = useStatsStore((s) => s.todayDone)
   const records = useScoreStore((s) => s.records)
-  const difficulty = useSettingsStore((s) => s.difficulty)
+  const levels = useSettingsStore((s) => s.levels)
   const menu = todaysMenu()
   const doneCount = menu.filter((g) => isDoneToday(todayDone, g.id)).length
   const next = menu.find((g) => !isDoneToday(todayDone, g.id))
@@ -40,7 +40,7 @@ export function HomePage() {
   const card = (g: GameMeta, badge?: string) => {
     const id = g.id as RankedGameId
     // 今選んでいる難易度 (レベル) での自己ベストを出す
-    const level = levelOption(id, difficulty?.[id])
+    const level = levelOption(id, levels?.[id])
     const best = rankingOf(records[id], level.id)[0]
     return (
       <GameCard

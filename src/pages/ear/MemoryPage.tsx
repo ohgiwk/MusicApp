@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { playChime, type MelodyHandle } from '../../audio/tonePlayer'
-import { DifficultyChip } from '../../components/DifficultySelect'
+import { LevelChip } from '../../components/LevelSelect'
 import { EarHud } from '../../components/ear/EarHud'
 import { EarIntro } from '../../components/ear/EarIntro'
 import { FeedbackBanner } from '../../components/ear/FeedbackBanner'
@@ -29,7 +29,7 @@ export function MemoryPage() {
   const level = MEMORY_LEVELS[levelId]
   const session = useEarSession(QUESTIONS.memory)
   const addScore = useScoreStore((s) => s.addScore)
-  const recordPlay = useStatsStore((s) => s.recordPlay)
+  const markPlayed = useStatsStore((s) => s.markPlayed)
   const recordMemory = useEarStore((s) => s.recordMemory)
 
   const [phase, setPhase] = useState<Phase>('intro')
@@ -97,7 +97,7 @@ export function MemoryPage() {
     if (session.isLast) {
       const accuracy = (session.correct / session.total) * 100
       setRank(addScore('memory', levelId, session.score, `${session.correct}/${session.total} 正解・最長${maxNotes}音`))
-      recordPlay('memory', {})
+      markPlayed('memory')
       recordMemory(maxNotes, accuracy)
       setPhase('result')
       return
@@ -135,7 +135,7 @@ export function MemoryPage() {
       {phase === 'playing' && q && (
         <div className="card flex min-h-[220px] flex-col items-center justify-center gap-3 p-5">
           <p className="text-sm font-bold text-ink-soft">
-            よく聴いて覚えよう… <DifficultyChip game="memory" />
+            よく聴いて覚えよう… <LevelChip game="memory" />
           </p>
           {/* 再生中は形を見せず、何音目かだけを示す */}
           <div className="w-full max-w-sm">

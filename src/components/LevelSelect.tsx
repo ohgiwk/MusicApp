@@ -2,7 +2,7 @@ import { GAME_LEVELS, levelOption, type LevelGameId } from '../games/difficulty'
 import { useLevel, useSettingsStore } from '../store/settingsStore'
 
 /** ゲーム開始前の難易度 (レベル) 選択。選んだものはゲームごとに保存される */
-export function DifficultySelect({
+export function LevelSelect({
   game,
   disabled,
   label = '難易度',
@@ -12,7 +12,7 @@ export function DifficultySelect({
   label?: string
 }) {
   const level = useLevel(game)
-  const setDifficulty = useSettingsStore((s) => s.setDifficulty)
+  const setLevel = useSettingsStore((s) => s.setLevel)
   const options = GAME_LEVELS[game]
   const current = levelOption(game, level)
   return (
@@ -32,7 +32,7 @@ export function DifficultySelect({
               role="radio"
               aria-checked={active}
               disabled={disabled}
-              onClick={() => setDifficulty(game, o.id)}
+              onClick={() => setLevel(game, o.id)}
               className={`whitespace-nowrap rounded-xl px-1 py-2 text-sm font-extrabold transition ${active ? 'text-white shadow' : 'text-ink-soft'}`}
               style={active ? { background: o.color } : undefined}
             >
@@ -46,7 +46,7 @@ export function DifficultySelect({
   )
 }
 
-export function DifficultyChip({ game }: { game: LevelGameId }) {
+export function LevelChip({ game }: { game: LevelGameId }) {
   const o = levelOption(game, useLevel(game))
   return (
     <span className="chip text-white" style={{ background: o.color }}>

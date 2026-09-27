@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { playChime, type MelodyHandle } from '../../audio/tonePlayer'
-import { DifficultyChip } from '../../components/DifficultySelect'
+import { LevelChip } from '../../components/LevelSelect'
 import { EarHud } from '../../components/ear/EarHud'
 import { EarIntro } from '../../components/ear/EarIntro'
 import { FeedbackBanner } from '../../components/ear/FeedbackBanner'
@@ -29,7 +29,7 @@ export function HighLowPage() {
   const level = HIGHLOW_LEVELS[levelId]
   const session = useEarSession(QUESTIONS.highlow)
   const addScore = useScoreStore((s) => s.addScore)
-  const recordPlay = useStatsStore((s) => s.recordPlay)
+  const markPlayed = useStatsStore((s) => s.markPlayed)
   const recordHighLow = useEarStore((s) => s.recordHighLow)
   const bestEver = useEarStore((s) => s.minDiffCents)
 
@@ -44,7 +44,15 @@ export function HighLowPage() {
   const prevCorrectDiff = useRef<number | null>(null)
   const playback = useRef<MelodyHandle | null>(null)
 
-  useEffect(() => () => playback.current?.cancel(), [])
+  // 画面を離れたら、再生と「次の問題を鳴らす」予約を止める
+  const askTimer = useRef(0)
+  useEffect(
+    () => () => {
+      playback.current?.cancel()
+      window.clearTimeout(askTimer.current)
+    },
+    [],
+  )
 
   const play = useCallback(async (q: HighLowQuestion, then: Phase) => {
     // 回答後の聴き直しは結果表示のまま鳴らす
@@ -63,7 +71,8 @@ export function HighLowPage() {
     // 再生が始まるまでの間も「再生中」扱いにして、次の問題の答えを先に見せない
     setPhase('playing')
     // 前の効果音と重ならないよう少し間をあける
-    window.setTimeout(() => void play(q, 'answer'), 250)
+    window.clearTimeout(askTimer.current)
+    askTimer.current = window.setTimeout(() => void play(q, 'answer'), 250)
   }
 
   const start = () => {
@@ -104,7 +113,7 @@ export function HighLowPage() {
   const finish = () => {
     const detail = `${session.correct}/${session.total} 正解${sessionMin !== null ? `・最小 ${formatInterval(sessionMin)}` : ''}`
     setRank(addScore('highlow', levelId, session.score, detail))
-    recordPlay('highlow', {})
+    markPlayed('highlow')
     recordHighLow(sessionMin)
     setPhase('result')
   }
@@ -177,7 +186,7 @@ export function HighLowPage() {
             </div>
             <p className="text-2xl font-extrabold">2つ目の音は？</p>
             <p className="text-xs font-bold text-ink-soft">
-              今の音の差: {semisText || '—'} <DifficultyChip game="highlow" />
+              今の音の差: {semisText || '—'} <LevelChip game="highlow" />
             </p>
           </>
         )}
