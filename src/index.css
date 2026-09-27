@@ -10,16 +10,21 @@
   --color-sun: #ffb020;
   --color-mint: #22c98c;
   --color-cloud: #f6f3ff;
+  --color-page: #eee6ff;
 }
 
 @layer base {
   html, body, #root { min-height: 100%; }
+  /* iOS Safari はページの背景「色」でステータスバー/ツールバーを塗るため、
+     グラデーションとは別に単色を指定する (index.html の theme-color と同じ色) */
+  html { background-color: var(--color-page); }
   body {
     @apply font-sans text-ink antialiased;
-    background:
-      radial-gradient(circle at 10% 0%, #ffe3f1 0, transparent 40%),
+    background-color: var(--color-page);
+    background-image:
+      radial-gradient(circle at 0% 30%, #ffe3f1 0, transparent 40%),
       radial-gradient(circle at 100% 20%, #dff6ff 0, transparent 45%),
-      linear-gradient(180deg, #f7f3ff 0%, #fff8ec 100%);
+      linear-gradient(180deg, var(--color-page) 0%, #fff8ec 100%);
     background-attachment: fixed;
     -webkit-tap-highlight-color: transparent;
     overscroll-behavior-y: none;
