@@ -29,6 +29,19 @@
     -webkit-tap-highlight-color: transparent;
     overscroll-behavior-y: none;
   }
+  /* ゲームアプリらしく: スクロールバーを隠す (スクロール自体はできる) */
+  html, body, * { scrollbar-width: none; }
+  *::-webkit-scrollbar { display: none; }
+  /* テキスト選択・長押しメニューを無効化 (声を出しながらのタップ操作で誤選択しないように) */
+  body {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+  }
+  input, textarea, [contenteditable="true"] {
+    -webkit-user-select: text;
+    user-select: text;
+  }
   button { cursor: pointer; }
   button:disabled { cursor: not-allowed; }
 }
