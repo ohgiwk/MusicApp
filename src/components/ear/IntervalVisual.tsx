@@ -1,4 +1,5 @@
 import { noteFromMidi } from '../../audio/pitchUtils'
+import { COLORS } from '../../theme'
 
 interface Props {
   from: number
@@ -16,7 +17,7 @@ interface Props {
  *            ↑ 7半音
  *   ● C4 ────┘
  */
-export function IntervalVisual({ from, to, label, sublabel, showNames = true, color = '#7c5cff' }: Props) {
+export function IntervalVisual({ from, to, label, sublabel, showNames = true, color = COLORS.grape }: Props) {
   const semis = to - from
   const PX = 9 // 1半音の高さ
   const h = semis === 0 ? 0 : Math.sign(semis) * Math.min(130, Math.max(34, Math.abs(semis) * PX))
@@ -38,7 +39,7 @@ export function IntervalVisual({ from, to, label, sublabel, showNames = true, co
         y1={y1}
         x2={x2}
         y2={y1}
-        stroke="#2a2350"
+        stroke={COLORS.ink}
         strokeOpacity={0.25}
         strokeWidth={2}
         strokeDasharray="4 4"
@@ -69,7 +70,7 @@ export function IntervalVisual({ from, to, label, sublabel, showNames = true, co
           />
         </>
       )}
-      <circle cx={x1} cy={y1} r={10} fill="#9a94b8" />
+      <circle cx={x1} cy={y1} r={10} fill={COLORS.muted} />
       <circle
         cx={x2}
         cy={y2}
@@ -86,7 +87,7 @@ export function IntervalVisual({ from, to, label, sublabel, showNames = true, co
             textAnchor="middle"
             fontSize={13}
             fontWeight={800}
-            fill="#6b6590"
+            fill={COLORS.inkSoft}
           >
             1音目 {noteFromMidi(from).label}
           </text>
@@ -95,7 +96,7 @@ export function IntervalVisual({ from, to, label, sublabel, showNames = true, co
           </text>
         </>
       )}
-      <text x={x2 + 18} y={cy + (sublabel ? -2 : 5)} fontSize={15} fontWeight={800} fill="#2a2350">
+      <text x={x2 + 18} y={cy + (sublabel ? -2 : 5)} fontSize={15} fontWeight={800} fill={COLORS.ink}>
         {label}
       </text>
       {sublabel && (

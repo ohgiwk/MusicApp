@@ -21,6 +21,7 @@ import { useDifficulty, useVoiceRange } from '../store/settingsStore'
 import { fromPitchTarget } from '../games/abilityScoring'
 import { useScoreStore, type RankResult } from '../store/scoreStore'
 import { useStatsStore } from '../store/statsStore'
+import { COLORS } from '../theme'
 
 const ROUNDS = 5
 const TONE_SEC = 1.2
@@ -274,7 +275,7 @@ function PitchTargetGame() {
               <span
                 key={i}
                 className={`h-3 w-7 rounded-full ${i === round && !r ? 'bg-grape/50' : 'bg-cloud'}`}
-                style={r ? { background: r.grade === 'SKIP' ? '#c9c3e0' : GRADE_STYLE[r.grade].color } : undefined}
+                style={r ? { background: r.grade === 'SKIP' ? COLORS.faint : GRADE_STYLE[r.grade].color } : undefined}
               />
             )
           })}
@@ -330,7 +331,7 @@ function PitchTargetGame() {
                 cx={62 - i * 1.1}
                 cy={50 - centsToView(c) * 50}
                 r={0.9}
-                fill={Math.abs(c) <= HIT_RANGE ? '#22c98c' : '#7c5cff'}
+                fill={Math.abs(c) <= HIT_RANGE ? COLORS.mint : COLORS.grape}
                 opacity={1 - i / TRAIL_LEN}
                 vectorEffect="non-scaling-stroke"
               />
@@ -344,7 +345,7 @@ function PitchTargetGame() {
             className="absolute left-[62%] -translate-x-1/2 -translate-y-1/2"
             style={{ top: `${50 - centsToView(cents) * 50}%` }}
           >
-            <HoldRing progress={s.hold} color={inZone ? '#22c98c' : cents > 0 ? '#ff5fa2' : '#22b8e8'} />
+            <HoldRing progress={s.hold} color={inZone ? COLORS.mint : cents > 0 ? COLORS.bubble : COLORS.sky} />
             {out && (
               <span
                 className="absolute left-1/2 -translate-x-1/2 text-2xl font-extrabold text-ink/60"
@@ -415,7 +416,7 @@ function PitchTargetGame() {
                 <span className="text-ink-soft">{r.grade === 'SKIP' ? '—' : `平均 ${r.meanAbs.toFixed(0)} cents`}</span>
                 <span
                   className="font-extrabold"
-                  style={{ color: r.grade === 'SKIP' ? '#9a94b8' : GRADE_STYLE[r.grade].color }}
+                  style={{ color: r.grade === 'SKIP' ? COLORS.muted : GRADE_STYLE[r.grade].color }}
                 >
                   {r.grade}
                 </span>

@@ -1,11 +1,12 @@
 import type { TargetLevel } from '../difficulty'
+import { COLORS } from '../../theme'
 
 export type Grade = 'PERFECT' | 'GREAT' | 'GOOD'
 
 export const GRADE_STYLE: Record<Grade, { color: string; points: number }> = {
-  PERFECT: { color: '#ff5fa2', points: 100 },
-  GREAT: { color: '#ffb020', points: 80 },
-  GOOD: { color: '#22b8e8', points: 60 },
+  PERFECT: { color: COLORS.bubble, points: 100 },
+  GREAT: { color: COLORS.sun, points: 80 },
+  GOOD: { color: COLORS.sky, points: 60 },
 }
 
 export interface HoldStats {

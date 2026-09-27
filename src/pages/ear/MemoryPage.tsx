@@ -1,23 +1,26 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
-import { playChime, type MelodyHandle } from '../../audio/tonePlayer'
+import { useState } from 'react'
+import { playChime } from '../../audio/tonePlayer'
 import { LevelChip } from '../../components/LevelSelect'
 import { EarHud } from '../../components/ear/EarHud'
 import { EarIntro } from '../../components/ear/EarIntro'
+import { FeedbackActions } from '../../components/ear/FeedbackActions'
 import { FeedbackBanner } from '../../components/ear/FeedbackBanner'
 import { MelodyLine } from '../../components/ear/MelodyLine'
 import { ReplayButton } from '../../components/ear/ReplayButton'
-import { Icon } from '../../components/Icon'
+import { ResultStats } from '../../components/ear/ResultStats'
 import { RankBadge } from '../../components/RankBadge'
 import { ResultModal } from '../../components/ResultModal'
 import { MEMORY_LEVELS, levelOption, type Difficulty } from '../../games/difficulty'
-import { QUESTIONS, playQuestion } from '../../games/ear/common'
+import { QUESTIONS } from '../../games/ear/common'
 import { basePoints, makeQuestion, type MemoryQuestion } from '../../games/ear/memory'
 import { gameMeta } from '../../games/meta'
 import { useEarSession, type AnswerKind } from '../../hooks/useEarSession'
+import { useQuestionPlayback } from '../../hooks/useQuestionPlayback'
 import { useEarStore } from '../../store/earStore'
 import { useScoreStore, type RankResult } from '../../store/scoreStore'
 import { useLevel } from '../../store/settingsStore'
 import { useStatsStore } from '../../store/statsStore'
+import { COLORS } from '../../theme'
 
 type Phase = 'intro' | 'playing' | 'answer' | 'feedback' | 'result'
 
@@ -34,41 +37,25 @@ export function MemoryPage() {
 
   const [phase, setPhase] = useState<Phase>('intro')
   const [question, setQuestion] = useState<MemoryQuestion | null>(null)
-  const [activeNote, setActiveNote] = useState(-1)
   const [feedback, setFeedback] = useState<{ kind: AnswerKind; gained: number; combo: number; chosen: number } | null>(
     null,
   )
   const [maxNotes, setMaxNotes] = useState(0)
   const [rank, setRank] = useState<RankResult | null>(null)
-  const playback = useRef<MelodyHandle | null>(null)
-  const timer = useRef(0)
+  const playback = useQuestionPlayback()
 
-  useEffect(
-    () => () => {
-      playback.current?.cancel()
-      window.clearTimeout(timer.current)
-    },
-    [],
-  )
-
-  const play = useCallback(
-    async (melody: number[], then: Phase) => {
-      setPhase(then === 'feedback' ? 'feedback' : 'playing')
-      playback.current?.cancel()
-      playback.current = playQuestion(melody, level.noteSec, setActiveNote)
-      // 途中で止めた (次の問題へ進んだ等) ときはフェーズを変えない
-      if (await playback.current.done) setPhase(then)
-    },
-    [level.noteSec],
-  )
+  /** メロディを鳴らし、最後まで鳴ったら then へ (回答後の聴き直しは結果表示のまま鳴らす) */
+  const play = async (melody: number[], then: Phase, delayMs = 0) => {
+    setPhase(then === 'feedback' ? 'feedback' : 'playing')
+    if (await playback.play(melody, level.noteSec, delayMs)) setPhase(then)
+  }
 
   const ask = () => {
     const q = makeQuestion(level)
     setQuestion(q)
     setFeedback(null)
-    // 再生が始まるまでの間も「再生中」扱いにして、次の問題の答えを先に見せない
-    setPhase('playing')
-    timer.current = window.setTimeout(() => void play(q.melody, 'answer'), 300)
+    // 前の効果音と重ならないよう少し間をあける (その間も「再生中」扱いで答えを見せない)
+    void play(q.melody, 'answer', 300)
   }
 
   const start = () => {
@@ -87,13 +74,11 @@ export function MemoryPage() {
     setFeedback({ kind: ok ? 'correct' : 'wrong', gained, combo, chosen })
     setPhase('feedback')
     // 効果音のあと、正解のメロディを光る点と一緒にもう一度鳴らす
-    timer.current = window.setTimeout(() => void play(question.melody, 'feedback'), 700)
+    void play(question.melody, 'feedback', 700)
   }
 
   const next = () => {
-    playback.current?.cancel()
-    window.clearTimeout(timer.current)
-    setActiveNote(-1)
+    playback.stop()
     if (session.isLast) {
       const accuracy = (session.correct / session.total) * 100
       setRank(addScore('memory', levelId, session.score, `${session.correct}/${session.total} 正解・最長${maxNotes}音`))
@@ -139,7 +124,13 @@ export function MemoryPage() {
           </p>
           {/* 再生中は形を見せず、何音目かだけを示す */}
           <div className="w-full max-w-sm">
-            <MelodyLine midis={q.melody} semitonePx={semitonePx} hidden active={activeNote} color={meta.color} />
+            <MelodyLine
+              midis={q.melody}
+              semitonePx={semitonePx}
+              hidden
+              active={playback.activeNote}
+              color={meta.color}
+            />
           </div>
           <p className="text-2xl font-extrabold">{q.melody.length}音のメロディ</p>
         </div>
@@ -170,7 +161,9 @@ export function MemoryPage() {
                 >
                   <span
                     className="grid h-9 w-9 shrink-0 place-items-center rounded-xl font-extrabold text-white"
-                    style={{ background: state === 'answer' ? '#22c98c' : state === 'wrong' ? '#ff5fa2' : meta.color }}
+                    style={{
+                      background: state === 'answer' ? COLORS.mint : state === 'wrong' ? COLORS.bubble : meta.color,
+                    }}
                   >
                     {LETTERS[i]}
                   </span>
@@ -178,8 +171,8 @@ export function MemoryPage() {
                     <MelodyLine
                       midis={o}
                       semitonePx={semitonePx}
-                      color={state === 'answer' ? '#22c98c' : state === 'wrong' ? '#ff5fa2' : meta.color}
-                      active={state === 'answer' ? activeNote : -1}
+                      color={state === 'answer' ? COLORS.mint : state === 'wrong' ? COLORS.bubble : meta.color}
+                      active={state === 'answer' ? playback.activeNote : -1}
                       height={80}
                     />
                   </span>
@@ -191,18 +184,13 @@ export function MemoryPage() {
       )}
 
       {phase === 'feedback' ? (
-        <div className="flex gap-3">
-          <button
-            className="btn-soft flex-1 whitespace-nowrap !px-3"
-            disabled={activeNote >= 0}
-            onClick={() => q && void play(q.melody, 'feedback')}
-          >
-            <Icon name="speaker" size={18} /> もう一度聴く
-          </button>
-          <button className="btn-primary flex-1 whitespace-nowrap !px-3" onClick={next}>
-            {session.isLast ? '結果を見る' : '次へ'} <Icon name="play" size={16} />
-          </button>
-        </div>
+        <FeedbackActions
+          onReplay={() => q && void play(q.melody, 'feedback')}
+          replayDisabled={playback.isPlaying}
+          onNext={next}
+          isLast={session.isLast}
+          replayLabel="もう一度聴く"
+        />
       ) : (
         <div className="flex justify-center">
           <ReplayButton
@@ -228,16 +216,12 @@ export function MemoryPage() {
           onChangeDifficulty={() => setPhase('intro')}
           badge={<RankBadge result={rank} game="memory" />}
         >
-          <div className="grid grid-cols-2 gap-2 text-center">
-            <div className="rounded-xl bg-cloud p-2">
-              <p className="text-[10px] font-bold text-ink-soft">最大COMBO</p>
-              <p className="text-base font-extrabold">{session.maxCombo}</p>
-            </div>
-            <div className="rounded-xl bg-cloud p-2">
-              <p className="text-[10px] font-bold text-ink-soft">覚えられた最長</p>
-              <p className="text-base font-extrabold">{maxNotes ? `${maxNotes}音` : '—'}</p>
-            </div>
-          </div>
+          <ResultStats
+            items={[
+              { label: '最大COMBO', value: String(session.maxCombo) },
+              { label: '覚えられた最長', value: maxNotes ? `${maxNotes}音` : '—' },
+            ]}
+          />
         </ResultModal>
       )}
     </div>

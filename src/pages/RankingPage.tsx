@@ -4,8 +4,9 @@ import { GAMES, gameMeta, scoreUnit } from '../games/meta'
 import { GAME_LEVELS, levelOption } from '../games/difficulty'
 import { useLevel } from '../store/settingsStore'
 import { RANKED_GAME_IDS, RANKING_SIZE, rankingOf, useScoreStore, type RankedGameId } from '../store/scoreStore'
+import { COLORS } from '../theme'
 
-const MEDALS = ['#ffb020', '#a9a6c4', '#d9905a']
+const MEDALS = [COLORS.sun, '#a9a6c4', '#d9905a']
 
 function formatDate(iso: string) {
   const d = new Date(iso)

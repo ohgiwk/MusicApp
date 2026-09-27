@@ -1,9 +1,13 @@
+import type { GameId } from './meta'
+import { COLORS } from '../theme'
+
 /**
  * 各ミニゲームの難易度パラメータ。「ふつう」が元々の設定。
  * ランキングは難易度ごとに分けて記録する。
  */
 export type Difficulty = 'easy' | 'normal' | 'hard'
-export type DifficultyGameId = 'target' | 'flight' | 'melody'
+/** かんたん/ふつう/むずかしい で遊ぶ声のゲーム */
+export type DifficultyGameId = Extract<GameId, 'target' | 'flight' | 'melody'>
 
 export const DIFFICULTIES: Difficulty[] = ['easy', 'normal', 'hard']
 
@@ -14,9 +18,9 @@ export const DIFFICULTY_LABELS: Record<Difficulty, string> = {
 }
 
 export const DIFFICULTY_COLORS: Record<Difficulty, string> = {
-  easy: '#22c98c',
-  normal: '#7c5cff',
-  hard: '#ff5fa2',
+  easy: COLORS.mint,
+  normal: COLORS.grape,
+  hard: COLORS.bubble,
 }
 
 export interface TargetLevel {
@@ -200,15 +204,16 @@ export const DISTANCE_LEVEL_IDS: DistanceLevelId[] = ['lv1', 'lv2', 'lv3', 'lv4'
 
 /** PITCH DISTANCE: 感覚 → 数字 → 音楽理論 の順に答え方が細かくなる */
 export const DISTANCE_LEVELS: Record<DistanceLevelId, { label: string; color: string; desc: string }> = {
-  lv1: { label: 'Lv.1', color: '#22c98c', desc: '上がった？下がった？ の2択' },
-  lv2: { label: 'Lv.2', color: '#22b8e8', desc: '少し上 / 大きく上 / 少し下 / 大きく下 の4択' },
-  lv3: { label: 'Lv.3', color: '#7c5cff', desc: '何半音動いたかを数字で答える' },
-  lv4: { label: 'Lv.4', color: '#ff5fa2', desc: '半音の数と音程の名前（長3度など）で答える' },
+  lv1: { label: 'Lv.1', color: COLORS.mint, desc: '上がった？下がった？ の2択' },
+  lv2: { label: 'Lv.2', color: COLORS.sky, desc: '少し上 / 大きく上 / 少し下 / 大きく下 の4択' },
+  lv3: { label: 'Lv.3', color: COLORS.grape, desc: '何半音動いたかを数字で答える' },
+  lv4: { label: 'Lv.4', color: COLORS.bubble, desc: '半音の数と音程の名前（長3度など）で答える' },
 }
 
 // ------------------------------------------------------------------ ゲームごとのレベル一覧 (共通)
 
-export type LevelGameId = DifficultyGameId | 'highlow' | 'distance' | 'memory'
+/** レベルを選べるゲーム (= 全ゲーム) */
+export type LevelGameId = GameId
 
 export interface LevelOption {
   id: string

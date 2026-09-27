@@ -1,5 +1,13 @@
 import type { IconName } from '../components/Icon'
-import type { RankedGameId } from '../store/scoreStore'
+import { COLORS } from '../theme'
+
+/**
+ * ゲームの ID の一覧 (ここが唯一の定義)。
+ * ゲームを追加するときは ここ + GAMES の情報 + router.tsx の PAGES + difficulty.ts のレベル を足す。
+ * (PAGES とレベルは Record<GameId, ...> なので、足し忘れると型エラーになる)
+ */
+export const GAME_IDS = ['target', 'flight', 'melody', 'highlow', 'distance', 'memory'] as const
+export type GameId = (typeof GAME_IDS)[number]
 
 /** 鍛える能力 (ホームの分類) */
 export type Skill = 'listen' | 'voice' | 'melody'
@@ -11,7 +19,7 @@ export const SKILLS: { id: Skill; emoji: string; label: string }[] = [
 ]
 
 export interface GameMeta {
-  id: RankedGameId | 'monitor'
+  id: GameId | 'monitor'
   to: string
   icon: IconName
   title: string
@@ -75,7 +83,7 @@ export const VOICE_GAMES: GameMeta[] = [
     title: 'ピッチターゲット',
     shortTitle: 'ターゲット',
     description: '狙った音を声で当てよう',
-    color: '#ff5fa2',
+    color: COLORS.bubble,
     category: 'voice',
     skill: 'voice',
   },
@@ -86,7 +94,7 @@ export const VOICE_GAMES: GameMeta[] = [
     title: 'ボイスフライト',
     shortTitle: 'フライト',
     description: '声の高さで飛んでみよう',
-    color: '#22b8e8',
+    color: COLORS.sky,
     category: 'voice',
     skill: 'voice',
   },
@@ -97,7 +105,7 @@ export const VOICE_GAMES: GameMeta[] = [
     title: 'メロディコピー',
     shortTitle: 'メロディ',
     description: '聞いたメロディを歌い返そう',
-    color: '#ffb020',
+    color: COLORS.sun,
     category: 'voice',
     skill: 'melody',
   },
@@ -113,16 +121,16 @@ export const MONITOR: GameMeta = {
   title: 'ピッチモニター',
   shortTitle: 'モニター',
   description: 'マイクと声の高さをチェック',
-  color: '#7c5cff',
+  color: COLORS.grape,
   category: 'voice',
   skill: 'voice',
 }
 
-export function gameMeta(id: RankedGameId): GameMeta {
+export function gameMeta(id: GameId): GameMeta {
   return GAMES.find((g) => g.id === id)!
 }
 
 /** スコアの単位 */
-export function scoreUnit(id: RankedGameId) {
+export function scoreUnit(id: GameId) {
   return id === 'flight' ? 'pt' : '点'
 }

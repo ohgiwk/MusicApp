@@ -3,7 +3,7 @@ import { Link, Outlet, useLocation } from 'react-router'
 import { isAudioUnlocked } from '../audio/audioUnlock'
 import { useBgm } from '../hooks/useBgm'
 import { useMicLifecycle } from '../hooks/useMicrophone'
-import { MONITOR, VOICE_GAMES } from '../games/meta'
+import { GAMES, MONITOR, VOICE_GAMES } from '../games/meta'
 import { Icon } from './Icon'
 import { TabBar } from './TabBar'
 import { TABS } from './tabs'
@@ -11,17 +11,11 @@ import { StartScreen } from './StartScreen'
 import { UpdateNotice } from './UpdateNotice'
 import { useSettingsStore } from '../store/settingsStore'
 
-const TITLES: Record<string, string> = {
-  '/monitor': 'ピッチモニター',
-  '/target': 'ピッチターゲット',
-  '/flight': 'ボイスフライト',
-  '/melody': 'メロディコピー',
-  '/ear/highlow': 'HIGH or LOW',
-  '/ear/distance': 'PITCH DISTANCE',
-  '/ear/memory': 'MELODY MEMORY',
-  '/ranking': 'ランキング',
-  '/mypage': 'マイページ',
-}
+/** ヘッダーのタイトル (ゲームの情報とタブから作る) */
+const TITLES: Record<string, string> = Object.fromEntries([
+  ...[...GAMES, MONITOR].map((g) => [g.to, g.title]),
+  ...TABS.map((t) => [t.to, t.label]),
+])
 
 export function Layout() {
   const { pathname } = useLocation()

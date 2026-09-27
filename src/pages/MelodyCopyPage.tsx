@@ -12,6 +12,7 @@ import { useDifficulty, useVoiceRange } from '../store/settingsStore'
 import { fromMelodyCopy } from '../games/abilityScoring'
 import { useScoreStore, type RankResult } from '../store/scoreStore'
 import { useStatsStore } from '../store/statsStore'
+import { COLORS } from '../theme'
 
 const COUNT_IN = 3
 
@@ -285,7 +286,7 @@ function MelodyGraph({
               x2={W - padR}
               y1={y(m)}
               y2={y(m)}
-              stroke="#2a2350"
+              stroke={COLORS.ink}
               strokeOpacity={noteFromMidi(m).name.includes('#') ? 0.03 : 0.08}
             />
             {!noteFromMidi(m).name.includes('#') && (
@@ -295,7 +296,7 @@ function MelodyGraph({
                 textAnchor="end"
                 fontSize={11}
                 fontWeight={700}
-                fill="#2a2350"
+                fill={COLORS.ink}
                 fillOpacity={0.35}
               >
                 {noteFromMidi(m).label}
@@ -308,13 +309,13 @@ function MelodyGraph({
           const nr = result?.notes[i]
           const color = nr
             ? nr.ok
-              ? '#22c98c'
+              ? COLORS.mint
               : nr.cents === null
-                ? '#c9c3e0'
-                : '#ff5fa2'
+                ? COLORS.faint
+                : COLORS.bubble
             : i === activeNote
-              ? '#ffb020'
-              : '#7c5cff'
+              ? COLORS.sun
+              : COLORS.grape
           const bandH = ((OK_CENTS / 100) * (H - 32)) / (hi - lo)
           return (
             <g key={i} opacity={showTargets ? 1 : 0.25}>
@@ -360,7 +361,7 @@ function MelodyGraph({
             key={i}
             d={d}
             fill="none"
-            stroke="#2a2350"
+            stroke={COLORS.ink}
             strokeWidth={3.5}
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -374,7 +375,7 @@ function MelodyGraph({
             x2={x(cursorT)}
             y1={8}
             y2={H - 8}
-            stroke="#ffb020"
+            stroke={COLORS.sun}
             strokeWidth={3}
             strokeLinecap="round"
           />
@@ -386,7 +387,7 @@ function MelodyGraph({
               cx={W - padR / 2}
               cy={y(Math.max(lo, Math.min(hi, liveMidi)))}
               r={9}
-              fill="#ff5fa2"
+              fill={COLORS.bubble}
               stroke="white"
               strokeWidth={3}
             />

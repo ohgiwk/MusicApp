@@ -20,6 +20,7 @@ import {
   useStatsStore,
 } from '../store/statsStore'
 import { APP_VERSION, formatVersion } from '../update/versionCheck'
+import { COLORS } from '../theme'
 
 export function MyPage() {
   const samples = useStatsStore((s) => s.samples)
@@ -151,7 +152,7 @@ export function MyPage() {
                       </span>
                       <span
                         className="block text-sm font-extrabold tabular-nums"
-                        style={{ color: best ? g.color : '#c9c3e0' }}
+                        style={{ color: best ? g.color : COLORS.faint }}
                       >
                         {best?.score ?? '—'}
                       </span>
@@ -273,7 +274,7 @@ function EarSummary() {
               <span className="block text-[11px] font-bold text-ink-soft">{it.label}</span>
               <span
                 className="block text-lg font-extrabold"
-                style={{ color: it.value === '—' ? '#9a94b8' : it.game.color }}
+                style={{ color: it.value === '—' ? COLORS.muted : it.game.color }}
               >
                 {it.value}
               </span>

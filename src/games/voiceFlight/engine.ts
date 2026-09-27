@@ -1,5 +1,6 @@
 import { clamp, isNatural, noteFromMidi } from '../../audio/pitchUtils'
 import type { FlightLevel } from '../difficulty'
+import { COLORS } from '../../theme'
 
 /**
  * ボイスフライトのゲームロジックと Canvas 描画。React からは独立。
@@ -49,7 +50,8 @@ export interface FlightStats {
   finished: boolean
 }
 
-const COLORS = ['#ff5fa2', '#ffb020', '#22c98c', '#22b8e8', '#7c5cff']
+/** 通過時に飛び散る粒の色 */
+const PARTICLE_COLORS = [COLORS.bubble, COLORS.sun, COLORS.mint, COLORS.sky, COLORS.grape]
 
 export class VoiceFlightEngine {
   private w = 320
@@ -229,7 +231,7 @@ export class VoiceFlightEngine {
         x: this.charX,
         y: this.charY - 30,
         text: perfect ? `PERFECT +${pts}` : `+${pts}`,
-        color: perfect ? '#ff5fa2' : '#22c98c',
+        color: perfect ? COLORS.bubble : COLORS.mint,
         life: 0.9,
       })
     } else {
@@ -241,7 +243,7 @@ export class VoiceFlightEngine {
         x: this.charX,
         y: this.charY - 30,
         text: this.charY > cy ? 'もっと高く！' : 'もっと低く！',
-        color: '#9a94b8',
+        color: COLORS.muted,
         life: 0.9,
       })
     }
@@ -257,7 +259,7 @@ export class VoiceFlightEngine {
         vx: Math.cos(a) * v,
         vy: Math.sin(a) * v - 80,
         life: 0.6 + Math.random() * 0.4,
-        color: COLORS[i % COLORS.length],
+        color: PARTICLE_COLORS[i % PARTICLE_COLORS.length],
       })
     }
   }
@@ -301,7 +303,7 @@ export class VoiceFlightEngine {
       ctx.lineTo(w, y)
       ctx.stroke()
       if (natural) {
-        ctx.fillStyle = near ? '#7c5cff' : 'rgba(42,35,80,0.35)'
+        ctx.fillStyle = near ? COLORS.grape : 'rgba(42,35,80,0.35)'
         ctx.fillText(noteFromMidi(m).label, 6, y)
       }
     }
@@ -351,7 +353,13 @@ export class VoiceFlightEngine {
     const bottom = cy + g.halfGap * semi
     const pw = 26
     const color =
-      g.state === 'miss' ? '#c9c3e0' : g.state === 'pending' ? '#ffb020' : g.state === 'perfect' ? '#ff5fa2' : '#22c98c'
+      g.state === 'miss'
+        ? COLORS.faint
+        : g.state === 'pending'
+          ? COLORS.sun
+          : g.state === 'perfect'
+            ? COLORS.bubble
+            : COLORS.mint
 
     ctx.fillStyle = color
     roundRect(ctx, g.x - pw / 2, -20, pw, top + 20, 12)
@@ -384,7 +392,7 @@ export class VoiceFlightEngine {
       const f = 10 + Math.sin(this.flap * 2) * 4
       const flame = ctx.createLinearGradient(-22 - f, 0, -14, 0)
       flame.addColorStop(0, 'rgba(255,176,32,0)')
-      flame.addColorStop(1, '#ffb020')
+      flame.addColorStop(1, COLORS.sun)
       ctx.fillStyle = flame
       ctx.beginPath()
       ctx.moveTo(-14, -7)
@@ -393,7 +401,7 @@ export class VoiceFlightEngine {
     }
 
     // 体
-    ctx.fillStyle = '#7c5cff'
+    ctx.fillStyle = COLORS.grape
     ctx.beginPath()
     ctx.ellipse(0, 0, 20, 17, 0, 0, Math.PI * 2)
     ctx.fill()
@@ -404,7 +412,7 @@ export class VoiceFlightEngine {
     ctx.fill()
     // 羽
     const wing = Math.sin(this.flap) * 7
-    ctx.fillStyle = '#ff5fa2'
+    ctx.fillStyle = COLORS.bubble
     ctx.beginPath()
     ctx.ellipse(-5, -2 + wing * 0.3, 9, 5 + Math.abs(wing) * 0.4, -0.4 + wing * 0.05, 0, Math.PI * 2)
     ctx.fill()
@@ -413,12 +421,12 @@ export class VoiceFlightEngine {
     ctx.beginPath()
     ctx.arc(9, -5, 6, 0, Math.PI * 2)
     ctx.fill()
-    ctx.fillStyle = '#2a2350'
+    ctx.fillStyle = COLORS.ink
     ctx.beginPath()
     ctx.arc(10.5, -5, 3, 0, Math.PI * 2)
     ctx.fill()
     // くちばし
-    ctx.fillStyle = '#ffb020'
+    ctx.fillStyle = COLORS.sun
     ctx.beginPath()
     ctx.moveTo(18, -1)
     ctx.lineTo(27, 2)

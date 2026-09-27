@@ -1,10 +1,11 @@
 import type { ReactNode } from 'react'
 import type { AnswerKind } from '../../hooks/useEarSession'
+import { COLORS } from '../../theme'
 
 const TEXT: Record<AnswerKind, { title: string; color: string }> = {
-  correct: { title: '正解！', color: '#22c98c' },
-  partial: { title: 'おしい！', color: '#ffb020' },
-  wrong: { title: 'ざんねん…', color: '#9a94b8' },
+  correct: { title: '正解！', color: COLORS.mint },
+  partial: { title: 'おしい！', color: COLORS.sun },
+  wrong: { title: 'ざんねん…', color: COLORS.muted },
 }
 
 /** 回答後の結果表示 (正解！ +120 / 3 COMBO / 実際の音程差) */

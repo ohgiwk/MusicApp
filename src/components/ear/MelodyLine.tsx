@@ -1,3 +1,5 @@
+import { COLORS } from '../../theme'
+
 interface Props {
   /** 音の高さ (MIDI。絶対値は使わず、動きだけを描く) */
   midis: number[]
@@ -12,7 +14,7 @@ interface Props {
 }
 
 /** 楽譜を使わずにメロディの上下の動きを線で描く */
-export function MelodyLine({ midis, semitonePx, color = '#7c5cff', active = -1, hidden, height = 90 }: Props) {
+export function MelodyLine({ midis, semitonePx, color = COLORS.grape, active = -1, hidden, height = 90 }: Props) {
   const W = 300
   const H = height
   const pad = 22

@@ -1,18 +1,14 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { GAME_IDS, type GameId } from '../games/meta'
 
-export type RankedGameId = 'target' | 'flight' | 'melody' | 'highlow' | 'distance' | 'memory'
+/** ランキングを記録するゲーム (= 全ゲーム) */
+export type RankedGameId = GameId
 
-export const RANKED_GAME_IDS: RankedGameId[] = ['target', 'flight', 'melody', 'highlow', 'distance', 'memory']
+export const RANKED_GAME_IDS: readonly RankedGameId[] = GAME_IDS
 
-const emptyRecords = (): Record<RankedGameId, ScoreRecord[]> => ({
-  target: [],
-  flight: [],
-  melody: [],
-  highlow: [],
-  distance: [],
-  memory: [],
-})
+const emptyRecords = () =>
+  Object.fromEntries(GAME_IDS.map((id) => [id, [] as ScoreRecord[]])) as Record<RankedGameId, ScoreRecord[]>
 
 export interface ScoreRecord {
   id: string

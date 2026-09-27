@@ -1,16 +1,17 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
-import { playChime, type MelodyHandle } from '../../audio/tonePlayer'
+import { useState } from 'react'
+import { playChime } from '../../audio/tonePlayer'
 import { LevelChip } from '../../components/LevelSelect'
 import { EarHud } from '../../components/ear/EarHud'
 import { EarIntro } from '../../components/ear/EarIntro'
+import { FeedbackActions } from '../../components/ear/FeedbackActions'
 import { FeedbackBanner } from '../../components/ear/FeedbackBanner'
 import { IntervalVisual } from '../../components/ear/IntervalVisual'
 import { ReplayButton } from '../../components/ear/ReplayButton'
-import { Icon } from '../../components/Icon'
+import { TwoTones } from '../../components/ear/TwoTones'
 import { RankBadge } from '../../components/RankBadge'
 import { ResultModal } from '../../components/ResultModal'
 import { DISTANCE_LEVEL_IDS, DISTANCE_LEVELS, type DistanceLevelId } from '../../games/difficulty'
-import { INTERVAL_NAMES, QUESTIONS, playQuestion } from '../../games/ear/common'
+import { INTERVAL_NAMES, QUESTIONS } from '../../games/ear/common'
 import {
   BASE_POINTS,
   LARGE_MIN,
@@ -25,6 +26,7 @@ import {
 } from '../../games/ear/distance'
 import { gameMeta } from '../../games/meta'
 import { useEarSession, type AnswerKind } from '../../hooks/useEarSession'
+import { useQuestionPlayback } from '../../hooks/useQuestionPlayback'
 import { useEarStore } from '../../store/earStore'
 import { useScoreStore, type RankResult } from '../../store/scoreStore'
 import { useLevel, useSettingsStore } from '../../store/settingsStore'
@@ -45,41 +47,24 @@ export function DistancePage() {
 
   const [phase, setPhase] = useState<Phase>('intro')
   const [question, setQuestion] = useState<DistanceQuestion | null>(null)
-  const [activeNote, setActiveNote] = useState(-1)
   const [feedback, setFeedback] = useState<{ kind: AnswerKind; gained: number; combo: number; chosen: string } | null>(
     null,
   )
   const [rank, setRank] = useState<RankResult | null>(null)
-  const playback = useRef<MelodyHandle | null>(null)
+  const playback = useQuestionPlayback()
 
-  // 画面を離れたら、再生と「次の問題を鳴らす」予約を止める
-  const askTimer = useRef(0)
-  useEffect(
-    () => () => {
-      playback.current?.cancel()
-      window.clearTimeout(askTimer.current)
-    },
-    [],
-  )
-
-  const play = useCallback(async (q: DistanceQuestion, then: Phase) => {
-    // 回答後の聴き直しは結果表示のまま鳴らす
+  /** 問題の2音を鳴らし、最後まで鳴ったら then へ (回答後の聴き直しは結果表示のまま鳴らす) */
+  const play = async (q: DistanceQuestion, then: Phase, delayMs = 0) => {
     setPhase(then === 'feedback' ? 'feedback' : 'playing')
-    playback.current?.cancel()
-    playback.current = playQuestion([q.first, q.second], NOTE_SEC, setActiveNote)
-    // 途中で止めた (次の問題へ進んだ等) ときはフェーズを変えない
-    if (await playback.current.done) setPhase(then)
-  }, [])
+    if (await playback.play([q.first, q.second], NOTE_SEC, delayMs)) setPhase(then)
+  }
 
   const ask = () => {
-    playback.current?.cancel()
     const q = makeQuestion(level)
     setQuestion(q)
     setFeedback(null)
-    // 再生が始まるまでの間も「再生中」扱いにして、次の問題の答えを先に見せない
-    setPhase('playing')
-    window.clearTimeout(askTimer.current)
-    askTimer.current = window.setTimeout(() => void play(q, 'answer'), 250)
+    // 前の効果音と重ならないよう少し間をあける (その間も「再生中」扱いで答えを見せない)
+    void play(q, 'answer', 250)
   }
 
   const start = () => {
@@ -98,8 +83,8 @@ export function DistancePage() {
   }
 
   const next = () => {
-    // 聴き直し中でも止めて次へ (止めないと再生終了時に画面が戻ってしまう)
-    playback.current?.cancel()
+    // 聴き直し中でも止めて次へ
+    playback.stop()
     if (session.isLast) {
       const accuracy = (session.correct / session.total) * 100
       setRank(
@@ -167,19 +152,7 @@ export function DistancePage() {
             <p className="text-sm font-bold text-ink-soft">
               {phase === 'playing' ? 'よく聴いて…' : '音はどう動いた？'}
             </p>
-            <div className="flex items-center gap-6">
-              {[0, 1].map((i) => (
-                <span
-                  key={i}
-                  className={`grid h-16 w-16 place-items-center rounded-full text-2xl font-extrabold transition ${
-                    activeNote === i ? 'scale-110 text-white shadow-lg' : 'bg-cloud text-ink-soft'
-                  }`}
-                  style={activeNote === i ? { background: meta.color } : undefined}
-                >
-                  {i + 1}
-                </span>
-              ))}
-            </div>
+            <TwoTones activeNote={playback.activeNote} color={meta.color} />
             <p className="text-2xl font-extrabold">{lv >= 3 ? '何半音動いた？' : '音はどう動いた？'}</p>
             <p className="flex items-center gap-2 text-xs font-bold text-ink-soft">
               <LevelChip game="distance" />
@@ -191,18 +164,12 @@ export function DistancePage() {
       </div>
 
       {phase === 'feedback' ? (
-        <div className="flex gap-3">
-          <button
-            className="btn-soft flex-1 whitespace-nowrap !px-3"
-            disabled={activeNote >= 0}
-            onClick={() => q && void play(q, 'feedback')}
-          >
-            <Icon name="speaker" size={18} /> 聴き直す
-          </button>
-          <button className="btn-primary flex-1 whitespace-nowrap !px-3" onClick={next}>
-            {session.isLast ? '結果を見る' : '次へ'} <Icon name="play" size={16} />
-          </button>
-        </div>
+        <FeedbackActions
+          onReplay={() => q && void play(q, 'feedback')}
+          replayDisabled={playback.isPlaying}
+          onNext={next}
+          isLast={session.isLast}
+        />
       ) : (
         <>
           <div

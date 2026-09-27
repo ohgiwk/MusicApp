@@ -1,3 +1,5 @@
+import { COLORS } from '../theme'
+
 interface Axis {
   label: string
   value: number | null
@@ -28,21 +30,21 @@ export function RadarChart({ axes, size = 240 }: { axes: Axis[]; size?: number }
         <polygon
           key={lv}
           points={poly(() => lv)}
-          fill={lv === 100 ? '#f6f3ff' : 'none'}
-          stroke="#2a2350"
+          fill={lv === 100 ? COLORS.cloud : 'none'}
+          stroke={COLORS.ink}
           strokeOpacity={0.1}
         />
       ))}
       {axes.map((_, i) => {
         const [x, y] = pt(i, 100)
-        return <line key={i} x1={c} y1={c} x2={x} y2={y} stroke="#2a2350" strokeOpacity={0.1} />
+        return <line key={i} x1={c} y1={c} x2={x} y2={y} stroke={COLORS.ink} strokeOpacity={0.1} />
       })}
       {hasAny && (
         <polygon
           points={poly((i) => axes[i].value ?? 0)}
-          fill="#7c5cff"
+          fill={COLORS.grape}
           fillOpacity={0.22}
-          stroke="#7c5cff"
+          stroke={COLORS.grape}
           strokeWidth={2.5}
           strokeLinejoin="round"
           style={{ transition: 'all 0.6s' }}
@@ -54,7 +56,7 @@ export function RadarChart({ axes, size = 240 }: { axes: Axis[]; size?: number }
         return (
           <g key={a.label}>
             {a.value !== null && <circle cx={x} cy={y} r={4.5} fill={a.color} stroke="white" strokeWidth={2} />}
-            <text x={lx} y={ly - 5} textAnchor="middle" fontSize={11} fontWeight={800} fill="#2a2350">
+            <text x={lx} y={ly - 5} textAnchor="middle" fontSize={11} fontWeight={800} fill={COLORS.ink}>
               {a.label}
             </text>
             <text
@@ -63,7 +65,7 @@ export function RadarChart({ axes, size = 240 }: { axes: Axis[]; size?: number }
               textAnchor="middle"
               fontSize={12}
               fontWeight={800}
-              fill={a.value === null ? '#9a94b8' : a.color}
+              fill={a.value === null ? COLORS.muted : a.color}
             >
               {a.value ?? '—'}
             </text>

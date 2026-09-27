@@ -3,6 +3,7 @@ import { MicPermissionGate } from '../components/MicPermissionGate'
 import { PitchReadout } from '../components/PitchReadout'
 import { MIN_CLARITY, usePitchDetection } from '../hooks/usePitchDetection'
 import { useSettingsStore } from '../store/settingsStore'
+import { COLORS } from '../theme'
 
 export function PitchMonitorPage() {
   return (
@@ -34,8 +35,8 @@ function Monitor() {
       </section>
 
       <section className="card flex flex-col gap-4 p-5">
-        <Meter label="音量" value={level} marker={Math.min(1, noiseGate / 0.2)} color="#22b8e8" />
-        <Meter label="ピッチ信頼度" value={frame.clarity} marker={MIN_CLARITY} color="#22c98c" />
+        <Meter label="音量" value={level} marker={Math.min(1, noiseGate / 0.2)} color={COLORS.sky} />
+        <Meter label="ピッチ信頼度" value={frame.clarity} marker={MIN_CLARITY} color={COLORS.mint} />
         <label className="flex flex-col gap-1 text-sm">
           <span className="font-bold">
             マイク感度 <span className="text-ink-soft">（反応しにくい時は右へ）</span>

@@ -27,5 +27,7 @@ export default defineConfig(({ command }) => ({
   test: {
     include: ['src/**/*.test.ts'],
     setupFiles: ['src/test/setup.ts'],
+    // theme.test.ts が index.css の中身を読めるように (既定では CSS は空文字になる)
+    css: { include: [/index\.css/] },
   },
 }))

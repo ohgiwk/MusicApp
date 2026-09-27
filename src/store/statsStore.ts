@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { COLORS } from '../theme'
 
 export type StatKey = 'accuracy' | 'stability' | 'control' | 'melody'
 
@@ -13,10 +14,10 @@ export const STAT_LABELS: Record<StatKey, string> = {
 }
 
 export const STAT_COLORS: Record<StatKey, string> = {
-  accuracy: '#ff5fa2',
-  stability: '#22c98c',
-  control: '#22b8e8',
-  melody: '#ffb020',
+  accuracy: COLORS.bubble,
+  stability: COLORS.mint,
+  control: COLORS.sky,
+  melody: COLORS.sun,
 }
 
 /** 何で計測しているか (マイページの説明用) */

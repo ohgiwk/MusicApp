@@ -1,15 +1,15 @@
 import { createBrowserRouter } from 'react-router'
 import { Layout } from './components/Layout'
-import { DistancePage } from './pages/ear/DistancePage'
-import { HighLowPage } from './pages/ear/HighLowPage'
-import { MemoryPage } from './pages/ear/MemoryPage'
+import { GAMES, MONITOR } from './games/meta'
+import { GAME_PAGES } from './pages/gamePages'
 import { HomePage } from './pages/HomePage'
-import { MelodyCopyPage } from './pages/MelodyCopyPage'
-import { PitchMonitorPage } from './pages/PitchMonitorPage'
-import { PitchTargetPage } from './pages/PitchTargetPage'
 import { MyPage } from './pages/MyPage'
 import { RankingPage } from './pages/RankingPage'
-import { VoiceFlightPage } from './pages/VoiceFlightPage'
+
+const gameRoutes = [...GAMES, MONITOR].map((g) => {
+  const Page = GAME_PAGES[g.id]
+  return { path: g.to.slice(1), element: <Page /> }
+})
 
 export const router = createBrowserRouter(
   [
@@ -18,13 +18,7 @@ export const router = createBrowserRouter(
       element: <Layout />,
       children: [
         { index: true, element: <HomePage /> },
-        { path: 'monitor', element: <PitchMonitorPage /> },
-        { path: 'target', element: <PitchTargetPage /> },
-        { path: 'flight', element: <VoiceFlightPage /> },
-        { path: 'melody', element: <MelodyCopyPage /> },
-        { path: 'ear/highlow', element: <HighLowPage /> },
-        { path: 'ear/distance', element: <DistancePage /> },
-        { path: 'ear/memory', element: <MemoryPage /> },
+        ...gameRoutes,
         { path: 'ranking', element: <RankingPage /> },
         { path: 'mypage', element: <MyPage /> },
         { path: '*', element: <HomePage /> },

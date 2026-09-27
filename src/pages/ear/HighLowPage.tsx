@@ -1,23 +1,27 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
-import { playChime, type MelodyHandle } from '../../audio/tonePlayer'
+import { useEffect, useRef, useState } from 'react'
+import { playChime } from '../../audio/tonePlayer'
 import { LevelChip } from '../../components/LevelSelect'
 import { EarHud } from '../../components/ear/EarHud'
 import { EarIntro } from '../../components/ear/EarIntro'
+import { FeedbackActions } from '../../components/ear/FeedbackActions'
 import { FeedbackBanner } from '../../components/ear/FeedbackBanner'
 import { IntervalVisual } from '../../components/ear/IntervalVisual'
 import { ReplayButton } from '../../components/ear/ReplayButton'
-import { Icon } from '../../components/Icon'
+import { ResultStats } from '../../components/ear/ResultStats'
+import { TwoTones } from '../../components/ear/TwoTones'
 import { RankBadge } from '../../components/RankBadge'
 import { ResultModal } from '../../components/ResultModal'
 import { HIGHLOW_LEVELS, levelOption, type Difficulty } from '../../games/difficulty'
-import { QUESTIONS, formatInterval, playQuestion } from '../../games/ear/common'
+import { QUESTIONS, formatInterval } from '../../games/ear/common'
 import { basePoints, initialDiff, makeQuestion, nextDiff, type HighLowQuestion } from '../../games/ear/highlow'
 import { gameMeta } from '../../games/meta'
 import { useEarSession, type AnswerKind } from '../../hooks/useEarSession'
+import { useQuestionPlayback } from '../../hooks/useQuestionPlayback'
 import { useEarStore } from '../../store/earStore'
 import { useScoreStore, type RankResult } from '../../store/scoreStore'
 import { useLevel } from '../../store/settingsStore'
 import { useStatsStore } from '../../store/statsStore'
+import { COLORS } from '../../theme'
 
 type Phase = 'intro' | 'playing' | 'answer' | 'feedback' | 'result'
 
@@ -35,44 +39,26 @@ export function HighLowPage() {
 
   const [phase, setPhase] = useState<Phase>('intro')
   const [question, setQuestion] = useState<HighLowQuestion | null>(null)
-  const [activeNote, setActiveNote] = useState(-1)
   const [feedback, setFeedback] = useState<{ kind: AnswerKind; gained: number; combo: number; chose: 1 | -1 } | null>(
     null,
   )
   const [sessionMin, setSessionMin] = useState<number | null>(null)
   const [rank, setRank] = useState<RankResult | null>(null)
   const prevCorrectDiff = useRef<number | null>(null)
-  const playback = useRef<MelodyHandle | null>(null)
+  const playback = useQuestionPlayback()
 
-  // 画面を離れたら、再生と「次の問題を鳴らす」予約を止める
-  const askTimer = useRef(0)
-  useEffect(
-    () => () => {
-      playback.current?.cancel()
-      window.clearTimeout(askTimer.current)
-    },
-    [],
-  )
-
-  const play = useCallback(async (q: HighLowQuestion, then: Phase) => {
-    // 回答後の聴き直しは結果表示のまま鳴らす
+  /** 問題の2音を鳴らし、最後まで鳴ったら then へ (回答後の聴き直しは結果表示のまま鳴らす) */
+  const play = async (q: HighLowQuestion, then: Phase, delayMs = 0) => {
     setPhase(then === 'feedback' ? 'feedback' : 'playing')
-    playback.current?.cancel()
-    playback.current = playQuestion([q.first, q.second], NOTE_SEC, setActiveNote)
-    // 途中で止めた (次の問題へ進んだ等) ときはフェーズを変えない
-    if (await playback.current.done) setPhase(then)
-  }, [])
+    if (await playback.play([q.first, q.second], NOTE_SEC, delayMs)) setPhase(then)
+  }
 
   const ask = (diff: number) => {
-    playback.current?.cancel()
     const q = makeQuestion(diff)
     setQuestion(q)
     setFeedback(null)
-    // 再生が始まるまでの間も「再生中」扱いにして、次の問題の答えを先に見せない
-    setPhase('playing')
-    // 前の効果音と重ならないよう少し間をあける
-    window.clearTimeout(askTimer.current)
-    askTimer.current = window.setTimeout(() => void play(q, 'answer'), 250)
+    // 前の効果音と重ならないよう少し間をあける (その間も「再生中」扱いで答えを見せない)
+    void play(q, 'answer', 250)
   }
 
   const start = () => {
@@ -100,8 +86,8 @@ export function HighLowPage() {
 
   const next = () => {
     if (!question || !feedback) return
-    // 聴き直し中でも止めて次へ (止めないと再生終了時に画面が戻ってしまう)
-    playback.current?.cancel()
+    // 聴き直し中でも止めて次へ
+    playback.stop()
     if (session.isLast) {
       finish()
       return
@@ -171,19 +157,7 @@ export function HighLowPage() {
         ) : (
           <>
             <p className="text-sm font-bold text-ink-soft">{phase === 'playing' ? 'よく聴いて…' : 'どっちが高い？'}</p>
-            <div className="flex items-center gap-6">
-              {[0, 1].map((i) => (
-                <span
-                  key={i}
-                  className={`grid h-16 w-16 place-items-center rounded-full text-2xl font-extrabold transition ${
-                    activeNote === i ? 'scale-110 text-white shadow-lg' : 'bg-cloud text-ink-soft'
-                  }`}
-                  style={activeNote === i ? { background: meta.color } : undefined}
-                >
-                  {i + 1}
-                </span>
-              ))}
-            </div>
+            <TwoTones activeNote={playback.activeNote} color={meta.color} />
             <p className="text-2xl font-extrabold">2つ目の音は？</p>
             <p className="text-xs font-bold text-ink-soft">
               今の音の差: {semisText || '—'} <LevelChip game="highlow" />
@@ -193,18 +167,12 @@ export function HighLowPage() {
       </div>
 
       {phase === 'feedback' ? (
-        <div className="flex gap-3">
-          <button
-            className="btn-soft flex-1 whitespace-nowrap !px-3"
-            disabled={activeNote >= 0}
-            onClick={() => q && void play(q, 'feedback')}
-          >
-            <Icon name="speaker" size={18} /> 聴き直す
-          </button>
-          <button className="btn-primary flex-1 whitespace-nowrap !px-3" onClick={next}>
-            {session.isLast ? '結果を見る' : '次へ'} <Icon name="play" size={16} />
-          </button>
-        </div>
+        <FeedbackActions
+          onReplay={() => q && void play(q, 'feedback')}
+          replayDisabled={playback.isPlaying}
+          onNext={next}
+          isLast={session.isLast}
+        />
       ) : (
         <>
           <div className="grid grid-cols-2 gap-3">
@@ -214,7 +182,7 @@ export function HighLowPage() {
                 disabled={phase !== 'answer'}
                 onClick={() => answer(d)}
                 className="btn flex-col !gap-0 !py-5 text-2xl text-white shadow-[0_6px_0_rgba(0,0,0,0.15)] disabled:!opacity-40"
-                style={{ background: d > 0 ? '#ff5fa2' : '#22b8e8' }}
+                style={{ background: d > 0 ? COLORS.bubble : COLORS.sky }}
               >
                 <span className="text-3xl leading-none">{d > 0 ? '↑' : '↓'}</span>
                 {d > 0 ? '高い' : '低い'}
@@ -244,23 +212,16 @@ export function HighLowPage() {
           onChangeDifficulty={() => setPhase('intro')}
           badge={<RankBadge result={rank} game="highlow" />}
         >
-          <div className="grid grid-cols-3 gap-2 text-center">
-            <Stat label="最大COMBO" value={String(session.maxCombo)} />
-            <Stat label="聞き分けた最小" value={sessionMin !== null ? formatInterval(sessionMin) : '—'} />
-            <Stat label="自己記録" value={bestEver !== null ? formatInterval(bestEver) : '—'} />
-          </div>
+          <ResultStats
+            items={[
+              { label: '最大COMBO', value: String(session.maxCombo) },
+              { label: '聞き分けた最小', value: sessionMin !== null ? formatInterval(sessionMin) : '—' },
+              { label: '自己記録', value: bestEver !== null ? formatInterval(bestEver) : '—' },
+            ]}
+          />
           <p className="mt-2 text-center text-[11px] text-ink-soft">「聞き分けた」= 2問連続で正解できた音の差</p>
         </ResultModal>
       )}
-    </div>
-  )
-}
-
-function Stat({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-xl bg-cloud p-2">
-      <p className="text-[10px] font-bold text-ink-soft">{label}</p>
-      <p className="text-base font-extrabold">{value}</p>
     </div>
   )
 }
