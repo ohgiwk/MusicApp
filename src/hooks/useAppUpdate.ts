@@ -36,11 +36,14 @@ export function useAppUpdate({ enabled = import.meta.env.PROD } = {}) {
     }
   }, [enabled, check])
 
+  // 開発時に通知の見た目を確認するためのスイッチ (例: http://localhost:5173/?preview-update)
+  const preview = import.meta.env.DEV && new URLSearchParams(window.location.search).has('preview-update')
+
   return {
     /** 通知を出すべきか ("あとで" を押したバージョンは再通知しない) */
-    available: latest !== null && latest !== dismissed,
+    available: preview ? dismissed === null : latest !== null && latest !== dismissed,
     latest,
     update: reloadToLatest,
-    dismiss: () => setDismissed(latest),
+    dismiss: () => setDismissed(latest ?? 'preview'),
   }
 }
